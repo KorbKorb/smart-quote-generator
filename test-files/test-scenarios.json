@@ -1,0 +1,54 @@
+{
+  "testFiles": [
+    {
+      "name": "sample-bracket.dxf",
+      "description": "Simple bracket with mounting holes",
+      "suggestedMaterial": "Mild Steel",
+      "suggestedThickness": "0.125",
+      "estimatedArea": "45 sq inches",
+      "bendCount": 2
+    },
+    {
+      "name": "sheet-metal-panel.dxf",
+      "description": "Flat panel 200x150mm",
+      "suggestedMaterial": "Aluminum",
+      "suggestedThickness": "0.0625",
+      "estimatedArea": "180 sq inches",
+      "bendCount": 0
+    },
+    {
+      "name": "test-drawing.pdf",
+      "description": "Generic technical drawing",
+      "suggestedMaterial": "Stainless Steel",
+      "suggestedThickness": "0.1875",
+      "estimatedArea": "120 sq inches",
+      "bendCount": 4
+    }
+  ],
+  "testScenarios": [
+    {
+      "scenario": "Rush Order - Simple Part",
+      "file": "sample-bracket.dxf",
+      "settings": {
+        "material": "Mild Steel",
+        "thickness": "0.125",
+        "quantity": 50,
+        "finishType": "powder-coat",
+        "urgency": "rush",
+        "expectedPrice": "$250-350"
+      }
+    },
+    {
+      "scenario": "High Volume - Aluminum",
+      "file": "sheet-metal-panel.dxf",
+      "settings": {
+        "material": "Aluminum",
+        "thickness": "0.0625",
+        "quantity": 1000,
+        "finishType": "anodized",
+        "urgency": "standard",
+        "expectedPrice": "$2000-3000"
+      }
+    }
+  ]
+}

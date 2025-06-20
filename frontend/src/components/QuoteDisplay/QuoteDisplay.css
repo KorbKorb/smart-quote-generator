@@ -1,0 +1,99 @@
+.quote-display {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.quote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.quote-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.quote-date {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.quote-section {
+  margin-bottom: 2rem;
+}
+
+.quote-section h4 {
+  margin-bottom: 1rem;
+  color: #555;
+  font-size: 1.125rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-grid label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-grid span {
+  color: #333;
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pricing-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.pricing-table .price {
+  text-align: right;
+  font-weight: 500;
+}
+
+.pricing-table .total-row {
+  border-top: 2px solid #333;
+  font-weight: bold;
+}
+
+.pricing-table .total-row .total {
+  font-size: 1.25rem;
+  color: #1976d2;
+}
+
+.notes {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}
+
+.quote-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.disclaimer {
+  font-size: 0.875rem;
+  color: #666;
+  font-style: italic;
+}
