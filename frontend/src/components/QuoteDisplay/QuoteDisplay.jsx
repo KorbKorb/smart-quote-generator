@@ -36,45 +36,45 @@ const QuoteDisplay = ({ quote }) => {
         </div>
 
         <div className="detail-row">
+          <span className="label">Total Weight:</span>
+          <span className="value">{quote.details?.weightPounds || '0'} lbs</span>
+        </div>
+
+        <div className="detail-row">
+          <span className="label">Total Area:</span>
+          <span className="value">{quote.details?.totalAreaSqFt || '0'} sq ft</span>
+        </div>
+
+        <div className="detail-row">
           <span className="label">Finish:</span>
           <span className="value">{quote.finishType === 'none' ? 'None' : quote.finishType}</span>
-        </div>
-
-        <div className="detail-row">
-          <span className="label">Bend Complexity:</span>
-          <span className="value">{quote.bendComplexity}</span>
-        </div>
-
-        <div className="detail-row">
-          <span className="label">Tolerance:</span>
-          <span className="value">{quote.toleranceLevel}</span>
         </div>
 
         <div className="detail-row">
           <span className="label">Urgency:</span>
           <span className="value urgency-{quote.urgency}">{quote.urgency}</span>
         </div>
-
-        {quote.notes && (
-          <div className="detail-row">
-            <span className="label">Notes:</span>
-            <span className="value">{quote.notes}</span>
-          </div>
-        )}
       </div>
 
       <div className="quote-pricing">
         <h4>Pricing Breakdown</h4>
         
         <div className="price-row">
-          <span>Base Material Cost:</span>
-          <span>${quote.baseCost || '0.00'}</span>
+          <span>Material Cost:</span>
+          <span>${quote.materialCost || '0.00'}</span>
         </div>
         
         <div className="price-row">
           <span>Cutting & Processing:</span>
           <span>${quote.cuttingCost || '0.00'}</span>
         </div>
+
+        {quote.bendCost && parseFloat(quote.bendCost) > 0 && (
+          <div className="price-row">
+            <span>Bending:</span>
+            <span>${quote.bendCost}</span>
+          </div>
+        )}
         
         {quote.finishType !== 'none' && (
           <div className="price-row">
@@ -89,10 +89,15 @@ const QuoteDisplay = ({ quote }) => {
             <span>${quote.rushFee || '0.00'}</span>
           </div>
         )}
+
+        <div className="price-row">
+          <span>Subtotal:</span>
+          <span>${quote.subtotal || '0.00'}</span>
+        </div>
         
         <div className="price-row total">
           <span>Total Cost:</span>
-          <span>${quote.totalCost || '0.00'}</span>
+          <span>${quote.total || quote.totalCost || '0.00'}</span>
         </div>
       </div>
 
