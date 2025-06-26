@@ -94,7 +94,19 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         calculationData
       );
 
-      setPricePreview(response.data.data);
+      console.log('Calculate response:', response.data);
+
+      // Handle the response structure
+      const priceData = response.data.data || response.data;
+
+      // Ensure we have the expected structure
+      if (!priceData.costs) {
+        console.error('Unexpected price data structure:', priceData);
+        setError('Price calculation returned unexpected format');
+        return;
+      }
+
+      setPricePreview(priceData);
       setShowPriceModal(true);
     } catch (err) {
       setError('Error calculating price. Please try again.');
@@ -325,44 +337,56 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
 
             <div className="price-breakdown">
               <h4>Price Breakdown:</h4>
-              <div className="price-line">
-                <span>Material Cost:</span>
-                <span>${pricePreview.breakdown.materialCost}</span>
-              </div>
-              <div className="price-line">
-                <span>Cutting Cost:</span>
-                <span>${pricePreview.breakdown.cuttingCost}</span>
-              </div>
-              {pricePreview.breakdown.bendCost > 0 && (
+              {pricePreview.costs?.materialCost && (
+                <div className="price-line">
+                  <span>Material Cost:</span>
+                  <span>${pricePreview.costs.materialCost}</span>
+                </div>
+              )}
+              {pricePreview.costs?.cuttingCost && (
+                <div className="price-line">
+                  <span>Cutting Cost:</span>
+                  <span>${pricePreview.costs.cuttingCost}</span>
+                </div>
+              )}
+              {parseFloat(pricePreview.costs?.bendCost) > 0 && (
                 <div className="price-line">
                   <span>Bending Cost:</span>
-                  <span>${pricePreview.breakdown.bendCost}</span>
+                  <span>${pricePreview.costs.bendCost}</span>
                 </div>
               )}
-              {pricePreview.breakdown.finishCost > 0 && (
+              {parseFloat(pricePreview.costs?.finishCost) > 0 && (
                 <div className="price-line">
                   <span>Finish Cost:</span>
-                  <span>${pricePreview.breakdown.finishCost}</span>
+                  <span>${pricePreview.costs.finishCost}</span>
                 </div>
               )}
-              {pricePreview.breakdown.rushFee > 0 && (
+              {parseFloat(pricePreview.costs?.rushFee) > 0 && (
                 <div className="price-line">
                   <span>Rush Fee:</span>
-                  <span>${pricePreview.breakdown.rushFee}</span>
+                  <span>${pricePreview.costs.rushFee}</span>
                 </div>
               )}
-              <div className="price-line total">
-                <span>Total:</span>
-                <span>${pricePreview.breakdown.total}</span>
-              </div>
+              {pricePreview.costs?.total && (
+                <div className="price-line total">
+                  <span>Total:</span>
+                  <span>${pricePreview.costs.total}</span>
+                </div>
+              )}
             </div>
 
             <div className="modal-details">
               <h4>Details:</h4>
               <p>Material: {formData.material}</p>
-              <p>Quantity: {pricePreview.details.quantity}</p>
-              <p>Total Area: {pricePreview.details.totalAreaSqFt} sq ft</p>
-              <p>Weight: {pricePreview.details.weightPounds} lbs</p>
+              <p>
+                Quantity: {pricePreview.details?.quantity || formData.quantity}
+              </p>
+              {pricePreview.details?.totalAreaSqFt && (
+                <p>Total Area: {pricePreview.details.totalAreaSqFt} sq ft</p>
+              )}
+              {pricePreview.details?.weightPounds && (
+                <p>Weight: {pricePreview.details.weightPounds} lbs</p>
+              )}
             </div>
 
             <div className="modal-actions">
