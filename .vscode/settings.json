@@ -1,0 +1,91 @@
+{
+  // Editor settings
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  
+  // File associations
+  "files.associations": {
+    "*.env.example": "dotenv",
+    ".env*": "dotenv"
+  },
+  
+  // Exclude files from explorer
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.DS_Store": true,
+    "**/coverage": true
+  },
+  
+  // Search exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/*.log": true
+  },
+  
+  // ESLint settings
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ],
+  "eslint.workingDirectories": [
+    "./frontend",
+    "./backend"
+  ],
+  
+  // Prettier settings
+  "prettier.semi": true,
+  "prettier.singleQuote": true,
+  "prettier.tabWidth": 2,
+  "prettier.trailingComma": "es5",
+  
+  // Terminal settings
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.linux": "bash",
+  
+  // NPM scripts
+  "npm.enableRunFromFolder": true,
+  "npm.scriptExplorerAction": "run",
+  
+  // AWS Toolkit settings
+  "aws.samcli.location": "/usr/local/bin/sam",
+  "aws.profile": "default",
+  
+  // Three.js specific
+  "[glsl]": {
+    "editor.defaultFormatter": "raczzalan.webgl-glsl-editor"
+  },
+  
+  // Auto-save settings
+  "files.autoSave": "onFocusChange",
+  
+  // Git settings
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  
+  // Workspace-specific settings for monorepo
+  "eslint.packageManager": "npm",
+  "npm.packageManager": "npm",
+  
+  // Custom color for this workspace
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#1a1a2e",
+    "titleBar.activeBackground": "#16213e",
+    "titleBar.activeForeground": "#e7e7e7"
+  },
+  
+  // Path intellisense
+  "path-intellisense.mappings": {
+    "@": "${workspaceFolder}/frontend/src",
+    "@backend": "${workspaceFolder}/backend/src",
+    "@shared": "${workspaceFolder}/shared"
+  }
+}

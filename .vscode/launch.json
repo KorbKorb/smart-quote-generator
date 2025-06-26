@@ -1,0 +1,150 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+
+
+
+    {
+      "name": "Debug Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      },
+      "preLaunchTask": "npm: start - frontend"
+    },
+    {
+      "name": "Debug Frontend (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      },
+      "preLaunchTask": "npm: start - frontend"
+    },
+    {
+      "name": "Debug Backend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "app:*"
+      },
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/backend/dist/**/*.js"
+      ]
+    },
+    {
+      "name": "Debug Backend (Attach)",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/backend/dist/**/*.js"
+      ]
+    },
+    {
+      "name": "Debug Jest Tests - Backend",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceFolder}/backend/node_modules/.bin/jest",
+        "--runInBand",
+        "--coverage=false"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug Jest Tests - Frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/frontend/node_modules/.bin/react-scripts",
+      "args": ["test", "--runInBand", "--no-cache", "--watchAll=false"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "CI": "true"
+      },
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug Current Test File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": [
+        "${relativeFile}",
+        "--runInBand",
+        "--coverage=false"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug AWS Lambda Function",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "sam",
+      "runtimeArgs": [
+        "local",
+        "invoke",
+        "-e",
+        "events/event.json",
+        "-d",
+        "5858"
+      ],
+      "port": 5858,
+      "cwd": "${workspaceFolder}/infrastructure/aws/lambda",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack Debug",
+      "configurations": [
+        "Debug Backend",
+        "Debug Frontend (Chrome)"
+      ],
+      "stopAll": true,
+      "preLaunchTask": "npm: install - root"
+    },
+    {
+      "name": "Test Suite Debug",
+      "configurations": [
+        "Debug Jest Tests - Backend",
+        "Debug Jest Tests - Frontend"
+      ],
+      "stopAll": true
+    }
+  ]
+}

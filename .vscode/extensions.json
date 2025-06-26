@@ -1,0 +1,80 @@
+{
+  "recommendations": [
+    // Essential for JavaScript/TypeScript development
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    
+    // React development
+    "dsznajder.es7-react-js-snippets",
+    "burkeholland.simple-react-snippets",
+    "jpoissonnier.vscode-styled-components",
+    
+    // Node.js and debugging
+    "ms-vscode.js-debug-nightly",
+    "christian-kohler.npm-intellisense",
+    
+    // Testing
+    "orta.vscode-jest",
+    "firsttris.vscode-jest-runner",
+    
+    // AWS development
+    "amazonwebservices.aws-toolkit-vscode",
+    "kddejong.vscode-cfn-lint",
+    
+    // MongoDB
+    "mongodb.mongodb-vscode",
+    
+    // Three.js and WebGL
+    "raczzalan.webgl-glsl-editor",
+    "slevesque.shader",
+    
+    // CAD file support
+    "tomoki1207.pdf",
+    "hediet.vscode-drawio",
+    
+    // Environment variables
+    "mikestead.dotenv",
+    
+    // Git
+    "donjayamanne.githistory",
+    "eamodio.gitlens",
+    
+    // Code quality and productivity
+    "sonarsource.sonarlint-vscode",
+    "wix.vscode-import-cost",
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
+    
+    // API development
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+    
+    // Docker support (if using Docker)
+    "ms-azuretools.vscode-docker",
+    
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    
+    // CSS/Styling
+    "bradlc.vscode-tailwindcss",
+    "clinyong.vscode-css-modules",
+    
+    // Code commenting
+    "aaron-bond.better-comments",
+    
+    // File icons
+    "vscode-icons-team.vscode-icons",
+    
+    // Productivity
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight",
+    "gruntfuggly.todo-tree"
+  ],
+  "unwantedRecommendations": [
+    // Add any extensions you specifically don't want recommended
+    "ms-vscode.vscode-typescript-tslint-plugin" // Deprecated in favor of ESLint
+  ]
+}
