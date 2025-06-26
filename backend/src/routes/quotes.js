@@ -1,315 +1,222 @@
 const express = require('express');
 const router = express.Router();
-const { calculateQuote } = require('../utils/quoteCalculator');
-const mongoose = require('mongoose');
+const Quote = require('../models/Quote');
+const calculateQuote = require('../utils/quoteCalculator');
+const multer = require('multer');
+const path = require('path');
 
-// Quote Schema (if not already defined elsewhere)
-const quoteSchema = new mongoose.Schema({
-  quoteNumber: { type: String, unique: true },
-  customer: {
-    name: String,
-    email: String,
-    company: String,
-    phone: String,
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
   },
-  items: [
-    {
-      material: String,
-      thickness: Number,
-      quantity: Number,
-      finishType: String,
-      bendComplexity: String,
-      toleranceLevel: String,
-      urgency: String,
-      files: [String],
-      pricing: Object,
-    },
-  ],
-  totalPrice: Number,
-  status: {
-    type: String,
-    enum: ['draft', 'sent', 'accepted', 'rejected', 'expired'],
-    default: 'draft',
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)
+    );
   },
-  validUntil: Date,
-  notes: String,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
 });
 
-const Quote = mongoose.model('Quote', quoteSchema);
-
-// Generate quote number
-function generateQuoteNumber() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, '0');
-  return `Q-${year}${month}-${random}`;
-}
-
-// @route   GET /api/quotes
-// @desc    Get all quotes with filtering and pagination
-// @access  Private
-router.get('/', async (req, res, next) => {
-  try {
-    const { page = 1, limit = 10, status, search } = req.query;
-
-    const query = {};
-    if (status) query.status = status;
-    if (search) {
-      query.$or = [
-        { quoteNumber: new RegExp(search, 'i') },
-        { 'customer.name': new RegExp(search, 'i') },
-        { 'customer.company': new RegExp(search, 'i') },
-      ];
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const allowedExtensions = [
+      '.dxf',
+      '.dwg',
+      '.step',
+      '.stp',
+      '.iges',
+      '.igs',
+    ];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedExtensions.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          'Invalid file type. Only DXF, DWG, STEP, and IGES files are allowed.'
+        )
+      );
     }
-
-    const quotes = await Quote.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
-
-    const count = await Quote.countDocuments(query);
-
-    res.json({
-      success: true,
-      count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      data: quotes,
-    });
-  } catch (error) {
-    next(error);
-  }
+  },
 });
 
-// @route   GET /api/quotes/:id
-// @desc    Get single quote by ID
-// @access  Private
-router.get('/:id', async (req, res, next) => {
+// Calculate quote (for preview)
+router.post('/calculate', async (req, res) => {
   try {
-    const quote = await Quote.findById(req.params.id);
+    const { items } = req.body;
 
-    if (!quote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quote not found',
-      });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res
+        .status(400)
+        .json({ error: 'No items provided for calculation' });
     }
-
-    res.json({
-      success: true,
-      data: quote,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// @route   POST /api/quotes
-// @desc    Create new quote
-// @access  Private
-router.post('/', async (req, res, next) => {
-  try {
-    const { customer, items, notes } = req.body;
 
     // Calculate pricing for each item
-    const pricedItems = await Promise.all(
-      items.map(async (item) => {
-        const pricing = await calculateQuote(item);
-        return {
-          ...item,
-          pricing,
-        };
-      })
-    );
+    const calculatedItems = items.map((item) => {
+      const pricing = calculateQuote(item);
+      return {
+        ...item,
+        pricing,
+      };
+    });
 
-    // Calculate total price
-    const totalPrice = pricedItems.reduce(
-      (sum, item) => sum + parseFloat(item.pricing.breakdown.total),
-      0
-    );
+    // Calculate totals
+    const totalPrice = calculatedItems.reduce((sum, item) => {
+      return sum + (item.pricing.costs.total || 0);
+    }, 0);
 
-    // Create quote
+    res.json({
+      items: calculatedItems,
+      totalPrice,
+      calculated: true,
+    });
+  } catch (error) {
+    console.error('Error calculating quote:', error);
+    res.status(500).json({ error: 'Failed to calculate quote' });
+  }
+});
+
+// Create a new quote
+router.post('/', async (req, res) => {
+  try {
+    const { customer, items, notes, dueDate } = req.body;
+
+    if (!customer || !items || items.length === 0) {
+      return res
+        .status(400)
+        .json({ error: 'Customer information and items are required' });
+    }
+
+    // Calculate pricing for each item if not already calculated
+    const processedItems = items.map((item) => {
+      if (!item.pricing) {
+        const pricing = calculateQuote(item);
+        return { ...item, pricing };
+      }
+      return item;
+    });
+
+    // Calculate total price from the costs.total field (matching calculator structure)
+    const totalPrice = processedItems.reduce((sum, item) => {
+      return sum + (item.pricing?.costs?.total || 0);
+    }, 0);
+
+    // Create the quote
     const quote = new Quote({
-      quoteNumber: generateQuoteNumber(),
       customer,
-      items: pricedItems,
+      items: processedItems,
       totalPrice,
       notes,
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      dueDate: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
+      status: 'draft',
     });
 
-    await quote.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Quote created successfully',
-      data: quote,
-    });
+    const savedQuote = await quote.save();
+    res.status(201).json(savedQuote);
   } catch (error) {
-    next(error);
+    console.error('Error creating quote:', error);
+    res.status(500).json({ error: 'Failed to create quote' });
   }
 });
 
-// @route   POST /api/quotes/calculate
-// @desc    Calculate quote price without saving
-// @access  Public
-router.post('/calculate', async (req, res, next) => {
+// Get all quotes
+router.get('/', async (req, res) => {
   try {
-    const quoteData = req.body;
-    const pricing = await calculateQuote(quoteData);
+    const { status, customerId } = req.query;
+    const filter = {};
 
-    res.json({
-      success: true,
-      data: pricing,
-    });
+    if (status) filter.status = status;
+    if (customerId) filter['customer.id'] = customerId;
+
+    const quotes = await Quote.find(filter).sort({ createdAt: -1 }).limit(100);
+
+    res.json(quotes);
   } catch (error) {
-    next(error);
+    console.error('Error fetching quotes:', error);
+    res.status(500).json({ error: 'Failed to fetch quotes' });
   }
 });
 
-// @route   PUT /api/quotes/:id
-// @desc    Update quote
-// @access  Private
-router.put('/:id', async (req, res, next) => {
-  try {
-    const { items, notes, status } = req.body;
-
-    const quote = await Quote.findById(req.params.id);
-
-    if (!quote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quote not found',
-      });
-    }
-
-    // Recalculate pricing if items changed
-    if (items) {
-      const pricedItems = await Promise.all(
-        items.map(async (item) => {
-          const pricing = await calculateQuote(item);
-          return {
-            ...item,
-            pricing,
-          };
-        })
-      );
-
-      quote.items = pricedItems;
-      quote.totalPrice = pricedItems.reduce(
-        (sum, item) => sum + parseFloat(item.pricing.breakdown.total),
-        0
-      );
-    }
-
-    if (notes !== undefined) quote.notes = notes;
-    if (status) quote.status = status;
-    quote.updatedAt = Date.now();
-
-    await quote.save();
-
-    res.json({
-      success: true,
-      message: 'Quote updated successfully',
-      data: quote,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// @route   DELETE /api/quotes/:id
-// @desc    Delete quote (soft delete by changing status)
-// @access  Private
-router.delete('/:id', async (req, res, next) => {
+// Get a single quote by ID
+router.get('/:id', async (req, res) => {
   try {
     const quote = await Quote.findById(req.params.id);
 
     if (!quote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quote not found',
-      });
+      return res.status(404).json({ error: 'Quote not found' });
     }
 
-    // Soft delete by changing status
-    quote.status = 'expired';
-    await quote.save();
-
-    res.json({
-      success: true,
-      message: 'Quote deleted successfully',
-    });
+    res.json(quote);
   } catch (error) {
-    next(error);
+    console.error('Error fetching quote:', error);
+    res.status(500).json({ error: 'Failed to fetch quote' });
   }
 });
 
-// @route   POST /api/quotes/:id/send
-// @desc    Send quote via email
-// @access  Private
-router.post('/:id/send', async (req, res, next) => {
+// Update quote status
+router.patch('/:id/status', async (req, res) => {
   try {
-    const { email } = req.body;
-    const quote = await Quote.findById(req.params.id);
+    const { status } = req.body;
+    const validStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const quote = await Quote.findByIdAndUpdate(
+      req.params.id,
+      { status, updatedAt: new Date() },
+      { new: true }
+    );
 
     if (!quote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quote not found',
-      });
+      return res.status(404).json({ error: 'Quote not found' });
     }
 
-    // TODO: Implement email sending with nodemailer
-    // For now, just update status
-    quote.status = 'sent';
-    await quote.save();
-
-    res.json({
-      success: true,
-      message: `Quote ${quote.quoteNumber} sent to ${email}`,
-    });
+    res.json(quote);
   } catch (error) {
-    next(error);
+    console.error('Error updating quote status:', error);
+    res.status(500).json({ error: 'Failed to update quote status' });
   }
 });
 
-// @route   GET /api/quotes/stats
-// @desc    Get quote statistics
-// @access  Private
-router.get('/stats/summary', async (req, res, next) => {
+// Delete a quote
+router.delete('/:id', async (req, res) => {
   try {
-    const stats = await Quote.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-          totalValue: { $sum: '$totalPrice' },
-        },
-      },
-    ]);
+    const quote = await Quote.findByIdAndDelete(req.params.id);
 
-    const totalQuotes = await Quote.countDocuments();
-    const avgQuoteValue = await Quote.aggregate([
-      { $group: { _id: null, avg: { $avg: '$totalPrice' } } },
-    ]);
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
 
-    res.json({
-      success: true,
-      data: {
-        totalQuotes,
-        averageQuoteValue: avgQuoteValue[0]?.avg || 0,
-        byStatus: stats,
-      },
-    });
+    res.json({ message: 'Quote deleted successfully' });
   } catch (error) {
-    next(error);
+    console.error('Error deleting quote:', error);
+    res.status(500).json({ error: 'Failed to delete quote' });
+  }
+});
+
+// Upload files for a quote
+router.post('/upload', upload.array('files', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const fileInfo = req.files.map((file) => ({
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      path: file.path,
+    }));
+
+    res.json({ files: fileInfo });
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    res.status(500).json({ error: 'Failed to upload files' });
   }
 });
 
