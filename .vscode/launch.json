@@ -1,10 +1,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-    
-
-
-
     {
       "name": "Debug Frontend (Chrome)",
       "type": "chrome",
@@ -123,7 +119,6 @@
         "-d",
         "5858"
       ],
-      "port": 5858,
       "cwd": "${workspaceFolder}/infrastructure/aws/lambda",
       "console": "integratedTerminal"
     }
