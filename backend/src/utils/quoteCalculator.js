@@ -99,3 +99,6 @@ const calculateQuote = (quoteData) => {
 };
 
 module.exports = { calculateQuote };
+
+
+module.exports = calculateQuote;

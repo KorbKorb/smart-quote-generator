@@ -21,38 +21,23 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
   const [pricePreview, setPricePreview] = useState(null);
   const [showPriceModal, setShowPriceModal] = useState(false);
 
-  // Default materials in case API fails
-  const defaultMaterials = [
-    { id: '1', name: 'Stainless Steel 304', pricePerPound: 2.5 },
-    { id: '2', name: 'Stainless Steel 316', pricePerPound: 3.2 },
-    { id: '3', name: 'Aluminum 6061', pricePerPound: 1.8 },
-    { id: '4', name: 'Cold Rolled Steel', pricePerPound: 0.85 },
-  ];
-
   // Fetch materials from backend
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/materials');
-        console.log('Materials API response:', response.data);
-
-        // Check if response.data is an array
-        if (Array.isArray(response.data)) {
-          setMaterials(response.data);
-        } else if (response.data && Array.isArray(response.data.data)) {
-          // Backend returns { success, count, data: [...] }
-          setMaterials(response.data.data);
-        } else if (response.data && Array.isArray(response.data.materials)) {
-          // Sometimes APIs return data wrapped in an object
-          setMaterials(response.data.materials);
-        } else {
-          console.warn('Unexpected materials data format:', response.data);
-          setMaterials(defaultMaterials);
-        }
-      } catch (err) {
-        console.error('Error fetching materials:', err);
-        // Use default materials if API fails
-        setMaterials(defaultMaterials);
+        const response = await axios.get(
+          'http://localhost:5000/api/quotes/materials'
+        );
+        setMaterials(response.data);
+      } catch (error) {
+        console.error('Error loading materials:', error);
+        // Fallback to hardcoded materials if API fails
+        setMaterials([
+          { id: 1, name: 'Cold Rolled Steel', pricePerPound: 0.85 },
+          { id: 2, name: 'Stainless Steel 304', pricePerPound: 2.5 },
+          { id: 3, name: 'Stainless Steel 316', pricePerPound: 3.2 },
+          { id: 4, name: 'Aluminum 6061', pricePerPound: 1.8 },
+        ]);
       }
     };
 
@@ -78,38 +63,58 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
     setError('');
 
     try {
-      // Prepare data for calculation
-      const calculationData = {
-        ...formData,
-        files: uploadedFiles.map((f) => ({
-          name: f.name,
-          size: f.size,
-          type: f.type,
-        })),
+      // Create an item object that matches what the backend expects
+      const item = {
+        partName:
+          uploadedFiles.length > 0 ? uploadedFiles[0].name : 'Custom Part',
+        material: formData.material,
+        thickness: parseFloat(formData.thickness),
+        quantity: parseInt(formData.quantity) || 1,
+        finish: formData.finishType || 'none',
+        bendCount:
+          formData.bendComplexity === 'simple'
+            ? 1
+            : formData.bendComplexity === 'moderate'
+            ? 4
+            : 8,
+        rushOrder: formData.urgency !== 'standard',
+        fileName: uploadedFiles.length > 0 ? uploadedFiles[0].name : undefined,
       };
 
-      // Call the calculate endpoint
+      console.log('Sending item for calculation:', item);
+
+      // Send in the format the backend expects
       const response = await axios.post(
         'http://localhost:5000/api/quotes/calculate',
-        calculationData
+        { items: [item] } // Wrap in items array
       );
 
       console.log('Calculate response:', response.data);
 
-      // Handle the response structure
-      const priceData = response.data.data || response.data;
-
-      // Ensure we have the expected structure
-      if (!priceData.costs) {
-        console.error('Unexpected price data structure:', priceData);
+      // The response should have items[0].pricing
+      if (
+        response.data.items &&
+        response.data.items[0] &&
+        response.data.items[0].pricing
+      ) {
+        setPricePreview(response.data.items[0].pricing);
+        setShowPriceModal(true);
+      } else {
+        console.error('Unexpected response structure:', response.data);
         setError('Price calculation returned unexpected format');
-        return;
       }
-
-      setPricePreview(priceData);
-      setShowPriceModal(true);
     } catch (err) {
-      setError('Error calculating price. Please try again.');
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response:', err.response.data);
+        setError(
+          err.response.data.error ||
+            'Error calculating price. Please try again.'
+        );
+      } else {
+        setError('Error calculating price. Please try again.');
+      }
       console.error('Price calculation error:', err);
     } finally {
       setCalculating(false);
@@ -135,27 +140,47 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
     setError('');
 
     try {
+      // Create the item with pricing info
+      const item = {
+        partName:
+          uploadedFiles.length > 0 ? uploadedFiles[0].name : 'Custom Part',
+        material: formData.material,
+        thickness: parseFloat(formData.thickness),
+        quantity: parseInt(formData.quantity) || 1,
+        finish: formData.finishType || 'none',
+        bendCount:
+          formData.bendComplexity === 'simple'
+            ? 1
+            : formData.bendComplexity === 'moderate'
+            ? 4
+            : 8,
+        rushOrder: formData.urgency !== 'standard',
+        fileName: uploadedFiles.length > 0 ? uploadedFiles[0].name : undefined,
+        pricing: pricePreview, // Include the calculated pricing
+      };
+
       // Prepare full quote data
       const quoteData = {
         customer: {
-          // You might want to add customer fields to the form
           name: 'Guest User',
           email: 'guest@example.com',
+          phone: '555-0123',
+          company: 'Guest Company',
         },
-        items: [
-          {
-            ...formData,
-            files: uploadedFiles.map((f) => f.name),
-          },
-        ],
-        notes: formData.notes,
+        items: [item],
+        notes: formData.notes || 'Generated from smart quote form',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       };
+
+      console.log('Sending quote data:', quoteData);
 
       // Send to backend to create quote
       const response = await axios.post(
         'http://localhost:5000/api/quotes',
         quoteData
       );
+
+      console.log('Quote created:', response.data);
 
       if (onQuoteGenerated) {
         onQuoteGenerated({
@@ -177,8 +202,18 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
       });
       setPricePreview(null);
       setShowPriceModal(false);
+
+      // Show success message
+      alert('Quote created successfully!');
     } catch (err) {
-      setError('Error creating quote. Please try again.');
+      if (err.response) {
+        console.error('Error response:', err.response.data);
+        setError(
+          err.response.data.error || 'Error creating quote. Please try again.'
+        );
+      } else {
+        setError('Error creating quote. Please try again.');
+      }
       console.error('Quote creation error:', err);
     } finally {
       setLoading(false);
@@ -340,37 +375,49 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
               {pricePreview.costs?.materialCost && (
                 <div className="price-line">
                   <span>Material Cost:</span>
-                  <span>${pricePreview.costs.materialCost}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.materialCost).toFixed(2)}
+                  </span>
                 </div>
               )}
               {pricePreview.costs?.cuttingCost && (
                 <div className="price-line">
                   <span>Cutting Cost:</span>
-                  <span>${pricePreview.costs.cuttingCost}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.cuttingCost).toFixed(2)}
+                  </span>
                 </div>
               )}
               {parseFloat(pricePreview.costs?.bendCost) > 0 && (
                 <div className="price-line">
                   <span>Bending Cost:</span>
-                  <span>${pricePreview.costs.bendCost}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.bendCost).toFixed(2)}
+                  </span>
                 </div>
               )}
               {parseFloat(pricePreview.costs?.finishCost) > 0 && (
                 <div className="price-line">
                   <span>Finish Cost:</span>
-                  <span>${pricePreview.costs.finishCost}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.finishCost).toFixed(2)}
+                  </span>
                 </div>
               )}
               {parseFloat(pricePreview.costs?.rushFee) > 0 && (
                 <div className="price-line">
                   <span>Rush Fee:</span>
-                  <span>${pricePreview.costs.rushFee}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.rushFee).toFixed(2)}
+                  </span>
                 </div>
               )}
               {pricePreview.costs?.total && (
                 <div className="price-line total">
                   <span>Total:</span>
-                  <span>${pricePreview.costs.total}</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.total).toFixed(2)}
+                  </span>
                 </div>
               )}
             </div>
@@ -382,10 +429,17 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
                 Quantity: {pricePreview.details?.quantity || formData.quantity}
               </p>
               {pricePreview.details?.totalAreaSqFt && (
-                <p>Total Area: {pricePreview.details.totalAreaSqFt} sq ft</p>
+                <p>
+                  Total Area:{' '}
+                  {parseFloat(pricePreview.details.totalAreaSqFt).toFixed(2)} sq
+                  ft
+                </p>
               )}
               {pricePreview.details?.weightPounds && (
-                <p>Weight: {pricePreview.details.weightPounds} lbs</p>
+                <p>
+                  Weight:{' '}
+                  {parseFloat(pricePreview.details.weightPounds).toFixed(2)} lbs
+                </p>
               )}
             </div>
 

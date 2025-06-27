@@ -33,10 +33,20 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
-
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, req.body);
+  next();
+});
 // API Routes
 app.use('/api/quotes', quotesRouter);
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
 
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
+});
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({

@@ -43,6 +43,17 @@ const upload = multer({
   },
 });
 
+// Get available materials
+router.get('/materials', (req, res) => {
+  const materials = [
+    { id: 1, name: 'Cold Rolled Steel', pricePerPound: 0.85 },
+    { id: 2, name: 'Stainless Steel 304', pricePerPound: 2.5 },
+    { id: 3, name: 'Stainless Steel 316', pricePerPound: 3.2 },
+    { id: 4, name: 'Aluminum 6061', pricePerPound: 1.8 },
+  ];
+  res.json(materials);
+});
+
 // Calculate quote (for preview)
 router.post('/calculate', async (req, res) => {
   try {
