@@ -1,15 +1,24 @@
 // frontend/src/pages/QuoteHistory.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Papa from 'papaparse';
 import './QuoteHistory.css';
 
+// Debounce function
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
 const QuoteHistory = () => {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    search: '',
     status: '',
     startDate: '',
     endDate: '',
@@ -19,15 +28,26 @@ const QuoteHistory = () => {
     sortOrder: 'desc'
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
+  // Count active filters
   useEffect(() => {
-    fetchQuotes();
-  }, [filters]);
+    const count = Object.keys(filters).filter(key => 
+      filters[key] && key !== 'sortBy' && key !== 'sortOrder'
+    ).length + (searchTerm ? 1 : 0);
+    setActiveFiltersCount(count);
+  }, [filters, searchTerm]);
 
-  const fetchQuotes = async () => {
+  // Fetch quotes function
+  const fetchQuotes = useCallback(async (search = searchTerm) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      
+      // Add search term
+      if (search) {
+        params.append('search', search);
+      }
       
       // Add filters to params
       Object.keys(filters).forEach(key => {
@@ -45,8 +65,24 @@ const QuoteHistory = () => {
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  // Debounced search
+  const debouncedSearch = useMemo(
+    () => debounce((searchValue) => {
+      fetchQuotes(searchValue);
+    }, 500),
+    [fetchQuotes]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
   };
 
+  // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -55,9 +91,10 @@ const QuoteHistory = () => {
     }));
   };
 
-  const clearFilters = () => {
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
     setFilters({
-      search: '',
       status: '',
       startDate: '',
       endDate: '',
@@ -67,6 +104,30 @@ const QuoteHistory = () => {
       sortOrder: 'desc'
     });
   };
+
+  // Clear individual filter
+  const clearFilter = (filterName) => {
+    if (filterName === 'search') {
+      setSearchTerm('');
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [filterName]: ''
+      }));
+    }
+  };
+
+  // Fetch quotes when filters change
+  useEffect(() => {
+    if (!searchTerm) { // Only fetch if not searching (search has its own debounce)
+      fetchQuotes('');
+    }
+  }, [filters, fetchQuotes]);
+
+  // Initial load
+  useEffect(() => {
+    fetchQuotes('');
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -100,7 +161,6 @@ const QuoteHistory = () => {
       'Materials': quote.items.map(item => item.material).join('; '),
       'Quantities': quote.items.map(item => item.quantity).join('; '),
       'Notes': quote.notes || '',
-      // Add detailed pricing for first item (can be expanded for all items)
       'Material Cost': quote.items[0]?.pricing?.costs?.materialCost || '',
       'Cutting Cost': quote.items[0]?.pricing?.costs?.cuttingCost || '',
       'Bend Cost': quote.items[0]?.pricing?.costs?.bendCost || '',
@@ -140,6 +200,18 @@ const QuoteHistory = () => {
     return statusClasses[status] || 'badge';
   };
 
+  // Get active filter labels
+  const getActiveFilterLabels = () => {
+    const labels = [];
+    if (searchTerm) labels.push({ key: 'search', label: `Search: "${searchTerm}"` });
+    if (filters.status) labels.push({ key: 'status', label: `Status: ${filters.status}` });
+    if (filters.startDate) labels.push({ key: 'startDate', label: `From: ${formatDate(filters.startDate)}` });
+    if (filters.endDate) labels.push({ key: 'endDate', label: `To: ${formatDate(filters.endDate)}` });
+    if (filters.minPrice) labels.push({ key: 'minPrice', label: `Min: ${formatCurrency(filters.minPrice)}` });
+    if (filters.maxPrice) labels.push({ key: 'maxPrice', label: `Max: ${formatCurrency(filters.maxPrice)}` });
+    return labels;
+  };
+
   if (loading && quotes.length === 0) {
     return (
       <div className="quote-history-loading">
@@ -155,7 +227,7 @@ const QuoteHistory = () => {
         <h1>Quote History</h1>
         <div className="header-actions">
           <button 
-            className="btn btn-secondary"
+            className={`btn btn-secondary ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -170,6 +242,9 @@ const QuoteHistory = () => {
               <circle cx="20" cy="14" r="2" />
             </svg>
             Filters
+            {activeFiltersCount > 0 && (
+              <span className="filter-count">{activeFiltersCount}</span>
+            )}
           </button>
           <button 
             className="btn btn-primary"
@@ -186,22 +261,67 @@ const QuoteHistory = () => {
         </div>
       </div>
 
+      {/* Search Bar - Always visible */}
+      <div className="search-bar">
+        <div className="search-input-wrapper">
+          <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8" strokeWidth="2" />
+            <path d="m21 21-4.35-4.35" strokeWidth="2" />
+          </svg>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Search by customer name, company, or quote ID..."
+            className="search-input"
+          />
+          {searchTerm && (
+            <button 
+              className="clear-search"
+              onClick={() => {
+                setSearchTerm('');
+                fetchQuotes('');
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <line x1="18" y1="6" x2="6" y2="18" strokeWidth="2" />
+                <line x1="6" y1="6" x2="18" y2="18" strokeWidth="2" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Active Filters Display */}
+      {getActiveFilterLabels().length > 0 && (
+        <div className="active-filters">
+          <span className="active-filters-label">Active filters:</span>
+          <div className="filter-tags">
+            {getActiveFilterLabels().map(({ key, label }) => (
+              <div key={key} className="filter-tag">
+                <span>{label}</span>
+                <button 
+                  className="remove-filter"
+                  onClick={() => clearFilter(key)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button 
+            className="clear-all-filters"
+            onClick={clearAllFilters}
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       {/* Filter Panel */}
       {showFilters && (
         <div className="filter-panel glass-card animate-slideDown">
           <div className="filter-grid">
-            <div className="filter-group">
-              <label>Search</label>
-              <input
-                type="text"
-                name="search"
-                value={filters.search}
-                onChange={handleFilterChange}
-                placeholder="Customer, company, or ID..."
-                className="form-control"
-              />
-            </div>
-
             <div className="filter-group">
               <label>Status</label>
               <select
@@ -292,19 +412,55 @@ const QuoteHistory = () => {
                 onChange={handleFilterChange}
                 className="form-control"
               >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
               </select>
             </div>
-          </div>
 
-          <div className="filter-actions">
-            <button 
-              className="btn btn-ghost"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </button>
+            <div className="filter-group quick-filters">
+              <label>Quick Filters</label>
+              <div className="quick-filter-buttons">
+                <button 
+                  className="quick-filter-btn"
+                  onClick={() => {
+                    const today = new Date();
+                    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    setFilters(prev => ({
+                      ...prev,
+                      startDate: lastWeek.toISOString().split('T')[0],
+                      endDate: today.toISOString().split('T')[0]
+                    }));
+                  }}
+                >
+                  Last 7 days
+                </button>
+                <button 
+                  className="quick-filter-btn"
+                  onClick={() => {
+                    const today = new Date();
+                    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                    setFilters(prev => ({
+                      ...prev,
+                      startDate: lastMonth.toISOString().split('T')[0],
+                      endDate: today.toISOString().split('T')[0]
+                    }));
+                  }}
+                >
+                  Last 30 days
+                </button>
+                <button 
+                  className="quick-filter-btn"
+                  onClick={() => {
+                    setFilters(prev => ({
+                      ...prev,
+                      status: 'accepted'
+                    }));
+                  }}
+                >
+                  Accepted only
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -312,15 +468,18 @@ const QuoteHistory = () => {
       {/* Results Summary */}
       <div className="results-summary">
         <p>
-          Showing <strong>{quotes.length}</strong> quotes
-          {filters.search && ` matching "${filters.search}"`}
-          {filters.status && ` with status: ${filters.status}`}
-          {(filters.startDate || filters.endDate) && ` within date range`}
+          {loading ? (
+            <span>Loading...</span>
+          ) : (
+            <span>
+              Showing <strong>{quotes.length}</strong> quote{quotes.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </p>
       </div>
 
       {/* Quotes Table */}
-      {quotes.length > 0 ? (
+      {!loading && quotes.length > 0 ? (
         <div className="quotes-table-container glass-card">
           <table className="quotes-table">
             <thead>
@@ -367,7 +526,7 @@ const QuoteHistory = () => {
             </tbody>
           </table>
         </div>
-      ) : (
+      ) : !loading ? (
         <div className="empty-state glass-card">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -377,17 +536,17 @@ const QuoteHistory = () => {
           </svg>
           <h3>No quotes found</h3>
           <p>
-            {filters.search || filters.status || filters.startDate || filters.endDate
-              ? 'Try adjusting your filters'
+            {searchTerm || activeFiltersCount > 0
+              ? 'Try adjusting your search or filters'
               : 'Create your first quote to get started'}
           </p>
-          {(filters.search || filters.status || filters.startDate || filters.endDate) && (
-            <button className="btn btn-primary" onClick={clearFilters}>
-              Clear Filters
+          {(searchTerm || activeFiltersCount > 0) && (
+            <button className="btn btn-primary" onClick={clearAllFilters}>
+              Clear All Filters
             </button>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
