@@ -167,16 +167,60 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all quotes
+// Get all quotes with advanced filtering
 router.get('/', async (req, res) => {
   try {
-    const { status, customerId } = req.query;
+    const { 
+      status, 
+      customerId, 
+      startDate, 
+      endDate, 
+      minPrice, 
+      maxPrice,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      limit = 100 
+    } = req.query;
+    
     const filter = {};
 
+    // Status filter
     if (status) filter.status = status;
+    
+    // Customer filter
     if (customerId) filter['customer.id'] = customerId;
+    
+    // Date range filter
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+    
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.totalPrice = {};
+      if (minPrice) filter.totalPrice.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.totalPrice.$lte = parseFloat(maxPrice);
+    }
+    
+    // Search filter (customer name, company, or quote ID)
+    if (search) {
+      filter.$or = [
+        { 'customer.name': { $regex: search, $options: 'i' } },
+        { 'customer.company': { $regex: search, $options: 'i' } },
+        { '_id': { $regex: search, $options: 'i' } }
+      ];
+    }
 
-    const quotes = await Quote.find(filter).sort({ createdAt: -1 }).limit(100);
+    // Sort options
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    const quotes = await Quote.find(filter)
+      .sort(sortOptions)
+      .limit(parseInt(limit));
 
     res.json(quotes);
   } catch (error) {

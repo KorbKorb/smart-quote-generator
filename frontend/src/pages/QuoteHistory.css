@@ -1,0 +1,339 @@
+/* QuoteHistory.css - Modern quote history page styles */
+
+.quote-history {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  font-size: 2.5rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Loading State */
+.quote-history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+}
+
+/* Filter Panel */
+.filter-panel {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Results Summary */
+.results-summary {
+  margin-bottom: 1.5rem;
+  color: var(--gray-600);
+}
+
+.results-summary strong {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+/* Quotes Table */
+.quotes-table-container {
+  overflow: hidden;
+  padding: 0;
+}
+
+.quotes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.quotes-table th {
+  text-align: left;
+  padding: 1rem 1.5rem;
+  background: var(--gray-50);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.quotes-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.quotes-table tbody tr {
+  transition: all var(--transition-fast);
+}
+
+.quotes-table tbody tr:hover {
+  background: var(--gray-50);
+  transform: translateX(4px);
+}
+
+/* Quote ID */
+.quote-id {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--primary-600);
+  font-size: 0.875rem;
+}
+
+/* Customer Info */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.customer-company {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+/* Items Count */
+.items-count {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* Quote Total */
+.quote-total {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--gray-900);
+}
+
+/* Status Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-state svg {
+  color: var(--gray-400);
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+}
+
+/* Export Button Icon Animation */
+.btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.btn:hover svg {
+  transform: translateY(2px);
+}
+
+/* Filter Button Active State */
+.btn-secondary.active {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  border-color: var(--primary-500);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .quote-history {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .header-actions {
+    justify-content: center;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quotes-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .quotes-table {
+    min-width: 700px;
+  }
+
+  .quotes-table tbody tr:hover {
+    transform: none;
+  }
+}
+
+/* Animations */
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Date Input Styling */
+input[type="date"] {
+  position: relative;
+  padding-right: 2.5rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Number Input Styling */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .filter-panel {
+  background: var(--glass-bg-dark);
+  border-color: var(--gray-700);
+}
+
+[data-theme="dark"] .quotes-table th {
+  background: var(--gray-800);
+  color: var(--gray-300);
+}
+
+[data-theme="dark"] .quotes-table tbody tr:hover {
+  background: var(--gray-800);
+}
+
+[data-theme="dark"] .customer-name {
+  color: var(--gray-100);
+}
+
+[data-theme="dark"] .quote-total {
+  color: var(--gray-100);
+}
+
+[data-theme="dark"] .results-summary {
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .results-summary strong {
+  color: var(--gray-200);
+}
