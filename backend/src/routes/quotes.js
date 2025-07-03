@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Quote = require('../models/Quote');
-const calculateQuote = require('../utils/quoteCalculator');
+const { calculateQuote, parseDXF } = require('../utils/quoteCalculator');
 const multer = require('multer');
 const path = require('path');
 
@@ -54,6 +54,40 @@ router.get('/materials', (req, res) => {
   res.json(materials);
 });
 
+// Analyze DXF file
+router.post('/analyze-dxf', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const dxfData = await parseDXF(req.file.path);
+    
+    // Clean up uploaded file after parsing
+    const fs = require('fs').promises;
+    await fs.unlink(req.file.path);
+    
+    res.json({
+      success: true,
+      data: dxfData,
+      filename: req.file.originalname
+    });
+  } catch (error) {
+    console.error('Error analyzing DXF:', error);
+    
+    // Clean up file on error
+    if (req.file && req.file.path) {
+      const fs = require('fs').promises;
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to analyze DXF file',
+      message: error.message 
+    });
+  }
+});
+
 // Calculate quote (for preview)
 router.post('/calculate', async (req, res) => {
   try {
@@ -76,12 +110,12 @@ router.post('/calculate', async (req, res) => {
 
     // Calculate totals
     const totalPrice = calculatedItems.reduce((sum, item) => {
-      return sum + (item.pricing.costs.total || 0);
+      return sum + parseFloat(item.pricing.costs.total || 0);
     }, 0);
 
     res.json({
       items: calculatedItems,
-      totalPrice,
+      totalPrice: totalPrice.toFixed(2),
       calculated: true,
     });
   } catch (error) {
@@ -112,7 +146,7 @@ router.post('/', async (req, res) => {
 
     // Calculate total price from the costs.total field (matching calculator structure)
     const totalPrice = processedItems.reduce((sum, item) => {
-      return sum + (item.pricing?.costs?.total || 0);
+      return sum + parseFloat(item.pricing?.costs?.total || 0);
     }, 0);
 
     // Create the quote

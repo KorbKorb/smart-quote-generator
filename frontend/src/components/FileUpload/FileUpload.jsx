@@ -21,11 +21,12 @@ const FileUpload = ({ onFileUpload }) => {
       id: Date.now() + Math.random()
     }));
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    const allFiles = [...uploadedFiles, ...newFiles];
+    setUploadedFiles(allFiles);
     
-    // Pass files to parent component
+    // Pass actual file objects to parent component
     if (onFileUpload) {
-      onFileUpload([...uploadedFiles, ...newFiles]);
+      onFileUpload(allFiles.map(f => f.file));
     }
   }, [uploadedFiles, onFileUpload]);
 
@@ -33,7 +34,7 @@ const FileUpload = ({ onFileUpload }) => {
     const updatedFiles = uploadedFiles.filter(f => f.id !== fileId);
     setUploadedFiles(updatedFiles);
     if (onFileUpload) {
-      onFileUpload(updatedFiles);
+      onFileUpload(updatedFiles.map(f => f.file));
     }
   };
 

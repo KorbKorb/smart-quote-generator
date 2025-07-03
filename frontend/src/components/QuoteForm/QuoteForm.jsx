@@ -20,6 +20,8 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
   const [error, setError] = useState('');
   const [pricePreview, setPricePreview] = useState(null);
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const [dxfData, setDxfData] = useState(null);
+  const [analyzingDXF, setAnalyzingDXF] = useState(false);
 
   // Fetch materials from backend
   useEffect(() => {
@@ -43,6 +45,67 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
 
     fetchMaterials();
   }, []);
+
+  // Analyze DXF files when uploaded
+  useEffect(() => {
+    const analyzeDXFFiles = async () => {
+      if (!uploadedFiles || uploadedFiles.length === 0) {
+        setDxfData(null);
+        return;
+      }
+
+      // Find the first DXF file
+      const dxfFile = uploadedFiles.find(file => 
+        file.name.toLowerCase().endsWith('.dxf')
+      );
+
+      if (!dxfFile) {
+        setDxfData(null);
+        return;
+      }
+
+      setAnalyzingDXF(true);
+      setError('');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', dxfFile);
+
+        const response = await axios.post(
+          'http://localhost:5000/api/quotes/analyze-dxf',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setDxfData(response.data.data);
+          
+          // Auto-update bend complexity based on DXF data
+          if (response.data.data.bendLines) {
+            const bendCount = response.data.data.bendLines.length;
+            if (bendCount === 0) {
+              setFormData(prev => ({ ...prev, bendComplexity: 'simple' }));
+            } else if (bendCount <= 3) {
+              setFormData(prev => ({ ...prev, bendComplexity: 'moderate' }));
+            } else {
+              setFormData(prev => ({ ...prev, bendComplexity: 'complex' }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error analyzing DXF:', err);
+        setError('Could not analyze DXF file. Quote will use estimated values.');
+      } finally {
+        setAnalyzingDXF(false);
+      }
+    };
+
+    analyzeDXFFiles();
+  }, [uploadedFiles]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,15 +133,12 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         material: formData.material,
         thickness: parseFloat(formData.thickness),
         quantity: parseInt(formData.quantity) || 1,
-        finish: formData.finishType || 'none',
-        bendCount:
-          formData.bendComplexity === 'simple'
-            ? 1
-            : formData.bendComplexity === 'moderate'
-            ? 4
-            : 8,
-        rushOrder: formData.urgency !== 'standard',
-        fileName: uploadedFiles.length > 0 ? uploadedFiles[0].name : undefined,
+        finishType: formData.finishType || 'none',
+        bendComplexity: formData.bendComplexity,
+        toleranceLevel: formData.toleranceLevel,
+        urgency: formData.urgency,
+        files: uploadedFiles,
+        dxfData: dxfData, // Include DXF analysis data
       };
 
       console.log('Sending item for calculation:', item);
@@ -105,8 +165,6 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
       }
     } catch (err) {
       if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error('Error response:', err.response.data);
         setError(
           err.response.data.error ||
@@ -147,15 +205,12 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         material: formData.material,
         thickness: parseFloat(formData.thickness),
         quantity: parseInt(formData.quantity) || 1,
-        finish: formData.finishType || 'none',
-        bendCount:
-          formData.bendComplexity === 'simple'
-            ? 1
-            : formData.bendComplexity === 'moderate'
-            ? 4
-            : 8,
-        rushOrder: formData.urgency !== 'standard',
-        fileName: uploadedFiles.length > 0 ? uploadedFiles[0].name : undefined,
+        finishType: formData.finishType || 'none',
+        bendComplexity: formData.bendComplexity,
+        toleranceLevel: formData.toleranceLevel,
+        urgency: formData.urgency,
+        files: uploadedFiles,
+        dxfData: dxfData,
         pricing: pricePreview, // Include the calculated pricing
       };
 
@@ -202,6 +257,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
       });
       setPricePreview(null);
       setShowPriceModal(false);
+      setDxfData(null);
 
       // Show success message
       alert('Quote created successfully!');
@@ -226,6 +282,57 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         <h3>Quote Details</h3>
 
         {error && <div className="error-message">{error}</div>}
+
+        {/* DXF Analysis Status */}
+        {analyzingDXF && (
+          <div className="info-message">Analyzing DXF file...</div>
+        )}
+
+        {dxfData && (
+          <div className="dxf-info">
+            <h4>DXF Analysis Results</h4>
+            <div className="dxf-details">
+              <div className="dxf-metric">
+                <span className="label">Part Area:</span>
+                <span className="value">{dxfData.area.toFixed(2)} sq in</span>
+              </div>
+              <div className="dxf-metric">
+                <span className="label">Cut Length:</span>
+                <span className="value">{dxfData.cutLength.toFixed(2)} in</span>
+              </div>
+              <div className="dxf-metric">
+                <span className="label">Holes:</span>
+                <span className="value">{dxfData.holeCount}</span>
+              </div>
+              <div className="dxf-metric">
+                <span className="label">Bend Lines:</span>
+                <span className="value">{dxfData.bendLines.length}</span>
+              </div>
+              <div className="dxf-metric">
+                <span className="label">Complexity:</span>
+                <span className={`value complexity-${dxfData.complexity}`}>
+                  {dxfData.complexity}
+                </span>
+              </div>
+              <div className="dxf-metric">
+                <span className="label">Source:</span>
+                <span className="value confidence-badge">
+                  Measured from DXF
+                </span>
+              </div>
+            </div>
+            {dxfData.warnings && dxfData.warnings.length > 0 && (
+              <div className="dxf-warnings">
+                <h5>Manufacturing Warnings:</h5>
+                <ul>
+                  {dxfData.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="form-grid">
           <div className="form-group">
@@ -296,7 +403,12 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="bendComplexity">Bend Complexity</label>
+            <label htmlFor="bendComplexity">
+              Bend Complexity 
+              {dxfData && dxfData.bendLines.length > 0 && (
+                <span className="auto-detected"> (Auto-detected)</span>
+              )}
+            </label>
             <select
               id="bendComplexity"
               name="bendComplexity"
@@ -356,6 +468,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
           disabled={
             calculating ||
             loading ||
+            analyzingDXF ||
             !uploadedFiles ||
             uploadedFiles.length === 0
           }
@@ -369,6 +482,15 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         <div className="modal-overlay" onClick={() => setShowPriceModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Quote Preview</h3>
+
+            {/* Measurement Source Badge */}
+            {pricePreview.details?.measurementSource && (
+              <div className={`measurement-badge ${pricePreview.details.measurementSource}`}>
+                {pricePreview.details.measurementSource === 'measured' 
+                  ? '✓ Measured from DXF' 
+                  : '≈ Estimated Values'}
+              </div>
+            )}
 
             <div className="price-breakdown">
               <h4>Price Breakdown:</h4>
@@ -388,15 +510,23 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
                   </span>
                 </div>
               )}
-              {parseFloat(pricePreview.costs?.bendCost) > 0 && (
+              {parseFloat(pricePreview.costs?.pierceCost || 0) > 0 && (
                 <div className="price-line">
-                  <span>Bending Cost:</span>
+                  <span>Pierce Cost ({pricePreview.details?.holeCount} holes):</span>
+                  <span>
+                    ${parseFloat(pricePreview.costs.pierceCost).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {parseFloat(pricePreview.costs?.bendCost || 0) > 0 && (
+                <div className="price-line">
+                  <span>Bending Cost ({pricePreview.details?.bendCount} bends):</span>
                   <span>
                     ${parseFloat(pricePreview.costs.bendCost).toFixed(2)}
                   </span>
                 </div>
               )}
-              {parseFloat(pricePreview.costs?.finishCost) > 0 && (
+              {parseFloat(pricePreview.costs?.finishCost || 0) > 0 && (
                 <div className="price-line">
                   <span>Finish Cost:</span>
                   <span>
@@ -404,7 +534,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
                   </span>
                 </div>
               )}
-              {parseFloat(pricePreview.costs?.rushFee) > 0 && (
+              {parseFloat(pricePreview.costs?.rushFee || 0) > 0 && (
                 <div className="price-line">
                   <span>Rush Fee:</span>
                   <span>
@@ -423,25 +553,54 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
             </div>
 
             <div className="modal-details">
-              <h4>Details:</h4>
+              <h4>Part Details:</h4>
               <p>Material: {formData.material}</p>
               <p>
                 Quantity: {pricePreview.details?.quantity || formData.quantity}
               </p>
+              {pricePreview.details?.areaPerPart && (
+                <p>
+                  Part Area: {' '}
+                  {parseFloat(pricePreview.details.areaPerPart).toFixed(2)} sq in
+                </p>
+              )}
               {pricePreview.details?.totalAreaSqFt && (
                 <p>
                   Total Area:{' '}
-                  {parseFloat(pricePreview.details.totalAreaSqFt).toFixed(2)} sq
-                  ft
+                  {parseFloat(pricePreview.details.totalAreaSqFt).toFixed(2)} sq ft
+                </p>
+              )}
+              {pricePreview.details?.cutLengthPerPart && (
+                <p>
+                  Cut Length per Part:{' '}
+                  {parseFloat(pricePreview.details.cutLengthPerPart).toFixed(2)} in
                 </p>
               )}
               {pricePreview.details?.weightPounds && (
                 <p>
-                  Weight:{' '}
+                  Total Weight:{' '}
                   {parseFloat(pricePreview.details.weightPounds).toFixed(2)} lbs
                 </p>
               )}
+              {pricePreview.details?.complexity && (
+                <p>
+                  Complexity: <span className={`complexity-${pricePreview.details.complexity}`}>
+                    {pricePreview.details.complexity}
+                  </span>
+                </p>
+              )}
             </div>
+
+            {pricePreview.details?.warnings && pricePreview.details.warnings.length > 0 && (
+              <div className="modal-warnings">
+                <h5>Manufacturing Notes:</h5>
+                <ul>
+                  {pricePreview.details.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="modal-actions">
               <button
@@ -461,6 +620,125 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .dxf-info {
+          background: #f0f8ff;
+          border: 1px solid #0066cc;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 20px;
+        }
+
+        .dxf-info h4 {
+          margin-top: 0;
+          color: #0066cc;
+        }
+
+        .dxf-details {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 12px;
+          margin-top: 12px;
+        }
+
+        .dxf-metric {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .dxf-metric .label {
+          font-size: 0.85rem;
+          color: #666;
+        }
+
+        .dxf-metric .value {
+          font-size: 1.1rem;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .complexity-simple { color: #22c55e; }
+        .complexity-moderate { color: #f59e0b; }
+        .complexity-complex { color: #ef4444; }
+
+        .confidence-badge {
+          background: #22c55e;
+          color: white;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 0.85rem;
+        }
+
+        .dxf-warnings {
+          margin-top: 16px;
+          padding: 12px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+        }
+
+        .dxf-warnings h5 {
+          margin-top: 0;
+          color: #856404;
+        }
+
+        .dxf-warnings ul {
+          margin: 8px 0 0 20px;
+          padding: 0;
+        }
+
+        .auto-detected {
+          font-size: 0.85rem;
+          color: #0066cc;
+          font-weight: normal;
+        }
+
+        .measurement-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 4px;
+          margin-bottom: 16px;
+          font-weight: bold;
+        }
+
+        .measurement-badge.measured {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        .measurement-badge.estimated {
+          background: #fed7aa;
+          color: #92400e;
+        }
+
+        .modal-warnings {
+          margin-top: 16px;
+          padding: 12px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+        }
+
+        .modal-warnings h5 {
+          margin-top: 0;
+          color: #856404;
+        }
+
+        .modal-warnings ul {
+          margin: 8px 0 0 20px;
+          padding: 0;
+        }
+
+        .info-message {
+          background: #e3f2fd;
+          color: #1565c0;
+          padding: 12px;
+          border-radius: 4px;
+          margin-bottom: 16px;
+          text-align: center;
+        }
+      `}</style>
     </>
   );
 };
