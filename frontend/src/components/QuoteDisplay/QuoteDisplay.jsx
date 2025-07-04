@@ -1,10 +1,12 @@
 // frontend/src/components/QuoteDisplay/QuoteDisplay.jsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './QuoteDisplay.css';
 
 const QuoteDisplay = ({ quote, onAccept, onReject, onClose }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [animatePrice, setAnimatePrice] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
     // Animate price on mount
@@ -24,6 +26,39 @@ const QuoteDisplay = ({ quote, onAccept, onReject, onClose }) => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const downloadPDF = async () => {
+    if (!quote._id) return;
+    
+    setGeneratingPDF(true);
+    try {
+      // Request PDF generation
+      const response = await axios.get(
+        `http://localhost:5000/api/quotes/${quote._id}/pdf`,
+        {
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `quote_${quote._id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      // Show success notification (optional)
+      console.log('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   if (!quote) return null;
@@ -286,6 +321,27 @@ const QuoteDisplay = ({ quote, onAccept, onReject, onClose }) => {
             </button>
           </>
         )}
+        <button 
+          className="btn btn-primary"
+          onClick={downloadPDF}
+          disabled={generatingPDF}
+        >
+          {generatingPDF ? (
+            <>
+              <div className="loading-spinner small"></div>
+              Generating PDF...
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
+                <polyline points="7 10 12 15 17 10" strokeWidth="2" />
+                <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" />
+              </svg>
+              Download PDF
+            </>
+          )}
+        </button>
         <button 
           className="btn btn-ghost"
           onClick={onClose}

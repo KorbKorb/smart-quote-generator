@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Quote = require('../models/Quote');
 const { calculateQuote, parseDXF } = require('../utils/quoteCalculator');
+const pdfGenerator = require('../utils/pdfGenerator');
+const emailService = require('../utils/emailService');
 const multer = require('multer');
 const path = require('path');
 
@@ -285,6 +287,96 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting quote:', error);
     res.status(500).json({ error: 'Failed to delete quote' });
+  }
+});
+
+// Generate PDF for a quote
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+    
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    // Generate PDF
+    const { filename, buffer } = await pdfGenerator.generateQuotePDF(quote);
+    
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    
+    // Send PDF buffer
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+});
+
+// Generate and save PDF for a quote
+router.post('/:id/generate-pdf', async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+    
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    // Generate and save PDF
+    const { filename, filepath } = await pdfGenerator.generateQuotePDF(quote);
+    
+    // Update quote with PDF info
+    quote.pdfFile = filename;
+    quote.pdfGeneratedAt = new Date();
+    await quote.save();
+    
+    res.json({ 
+      success: true,
+      filename,
+      message: 'PDF generated successfully'
+    });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+});
+
+// Send quote via email
+router.post('/:id/send-email', async (req, res) => {
+  try {
+    const { recipientEmail } = req.body;
+    const quote = await Quote.findById(req.params.id);
+    
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    // Generate PDF first
+    const { filepath } = await pdfGenerator.generateQuotePDF(quote);
+    
+    // Send email with PDF attachment
+    await emailService.sendQuoteEmail(quote, filepath, recipientEmail);
+    
+    // Update quote status to 'sent' if it's still a draft
+    if (quote.status === 'draft') {
+      quote.status = 'sent';
+      quote.sentAt = new Date();
+      await quote.save();
+    }
+    
+    res.json({ 
+      success: true,
+      message: 'Quote sent successfully',
+      recipientEmail: recipientEmail || quote.customer.email
+    });
+  } catch (error) {
+    console.error('Error sending quote email:', error);
+    res.status(500).json({ 
+      error: 'Failed to send email',
+      message: error.message 
+    });
   }
 });
 

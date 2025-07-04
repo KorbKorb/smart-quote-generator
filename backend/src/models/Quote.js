@@ -114,6 +114,8 @@ const quoteSchema = new mongoose.Schema({
     default: 'draft',
   },
   notes: String,
+  pdfFile: String,
+  pdfGeneratedAt: Date,
   dueDate: {
     type: Date,
     default: function () {
