@@ -15,6 +15,7 @@ import RegistrationSuccess from './customer-portal/pages/RegistrationSuccess';
 import CustomerDashboard from './customer-portal/pages/Dashboard';
 
 import './App.css';
+import './customer-portal/styles/typography.css';
 
 function App() {
   return (

@@ -1,0 +1,85 @@
+/* Global Typography Adjustments for Customer Portal */
+
+/* Adjust base font sizes for better readability with serif */
+.login-container,
+.register-container,
+.dashboard-container,
+.portal-layout {
+  font-size: 17px;
+}
+
+/* Make form inputs and labels consistent */
+.form-input,
+.form-group label,
+.checkbox-label span {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+
+/* Adjust paragraph spacing for serif readability */
+p {
+  margin-bottom: 1.2em;
+  line-height: 1.7;
+}
+
+/* Dashboard specific adjustments */
+.welcome-message,
+.stat-label,
+.empty-state p,
+.quick-action-card p {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Table adjustments */
+.quotes-table {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+/* Badge and button text should remain sans-serif */
+.badge,
+.btn,
+.action-link,
+.nav-item,
+.nav-label {
+  font-family: var(--font-sans) !important;
+}
+
+/* Success page adjustments */
+.success-message,
+.email-text,
+.step-content p {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* Login/Register headers */
+.login-header p,
+.register-header p {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Feature lists */
+.features-list li,
+.benefit-item p {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Modal content */
+.modal-content p,
+.price-breakdown {
+  font-family: var(--font-serif);
+}
+
+/* Ensure proper contrast with serif fonts */
+body {
+  letter-spacing: 0.01em;
+  text-rendering: optimizeLegibility;
+}
