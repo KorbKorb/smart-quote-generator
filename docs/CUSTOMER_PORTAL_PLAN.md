@@ -1,7 +1,9 @@
 # Customer Portal Implementation Plan
 
 ## Overview
+
 The Customer Portal will provide a self-service interface where customers can:
+
 - View and manage their quotes
 - Accept or reject quotes online
 - Track order history
@@ -12,6 +14,7 @@ The Customer Portal will provide a self-service interface where customers can:
 ## Architecture
 
 ### Frontend Routes
+
 ```
 /portal                    - Portal login page
 /portal/dashboard          - Customer dashboard
@@ -24,6 +27,7 @@ The Customer Portal will provide a self-service interface where customers can:
 ```
 
 ### Backend Routes
+
 ```
 /api/auth/customer/register     - Customer registration
 /api/auth/customer/login        - Customer login
@@ -40,13 +44,16 @@ The Customer Portal will provide a self-service interface where customers can:
 ## Features to Implement
 
 ### Phase 1: Authentication & Basic Portal (Days 1-2)
+
 1. **Customer Model**
+
    - Email/password authentication
    - Profile information
    - Company details
    - Contact preferences
 
 2. **Authentication System**
+
    - JWT-based auth
    - Secure login/logout
    - Password reset via email
@@ -59,13 +66,16 @@ The Customer Portal will provide a self-service interface where customers can:
    - Mobile-friendly
 
 ### Phase 2: Quote Management (Days 2-3)
+
 1. **Quote Dashboard**
+
    - List all quotes
    - Filter by status
    - Search functionality
    - Sort options
 
 2. **Quote Details**
+
    - View full quote information
    - Download PDF
    - View 3D part preview
@@ -78,13 +88,16 @@ The Customer Portal will provide a self-service interface where customers can:
    - Add notes
 
 ### Phase 3: Self-Service Features (Days 3-4)
+
 1. **New Quote Request**
+
    - Upload DXF files
    - Specify requirements
    - Save draft requests
    - Track request status
 
 2. **Order History**
+
    - View accepted quotes
    - Reorder previous parts
    - Download invoices
@@ -97,13 +110,16 @@ The Customer Portal will provide a self-service interface where customers can:
    - Technical drawings
 
 ### Phase 4: Enhanced Features (Days 4-5)
+
 1. **Account Management**
+
    - Update profile
    - Change password
    - Notification preferences
    - Billing addresses
 
 2. **Communication**
+
    - Message history
    - Quote comments
    - Support tickets
@@ -118,6 +134,7 @@ The Customer Portal will provide a self-service interface where customers can:
 ## Technical Stack
 
 ### Frontend
+
 - React with React Router
 - Separate auth context for customers
 - Protected routes
@@ -125,18 +142,21 @@ The Customer Portal will provide a self-service interface where customers can:
 - Recharts for analytics
 
 ### Backend
+
 - Express middleware for customer auth
 - Separate JWT secret for customers
 - Role-based access control
 - Customer-specific API endpoints
 
 ### Database
+
 - Customer model with auth fields
 - Relationship to quotes
 - Activity logging
 - Preferences storage
 
 ## Security Considerations
+
 - Separate auth system from admin
 - Rate limiting on auth endpoints
 - Email verification
@@ -145,6 +165,7 @@ The Customer Portal will provide a self-service interface where customers can:
 - CORS configuration
 
 ## UI/UX Design
+
 - Clean, professional interface
 - Company branding options
 - Mobile-first approach
@@ -153,6 +174,7 @@ The Customer Portal will provide a self-service interface where customers can:
 - Help tooltips
 
 ## Implementation Order
+
 1. Customer model and auth
 2. Portal layout and routing
 3. Quote viewing functionality
