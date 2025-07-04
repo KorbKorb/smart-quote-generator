@@ -1,0 +1,67 @@
+/* frontend/src/pages/QuoteDetail.css */
+.quote-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.quote-detail-page .page-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.quote-detail-loading,
+.quote-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.quote-detail-error h2 {
+  color: #ef4444;
+  margin-bottom: 0.5rem;
+}
+
+.quote-detail-error p {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .quote-detail-page {
+    padding: 1rem;
+  }
+
+  .quote-detail-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

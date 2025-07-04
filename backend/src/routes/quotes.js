@@ -359,12 +359,18 @@ router.post('/:id/send-email', async (req, res) => {
     // Send email with PDF attachment
     await emailService.sendQuoteEmail(quote, filepath, recipientEmail);
     
+    // Update quote with email information
+    quote.emailSentAt = new Date();
+    quote.emailSentTo = recipientEmail || quote.customer.email;
+    quote.emailStatus = 'sent';
+    
     // Update quote status to 'sent' if it's still a draft
     if (quote.status === 'draft') {
       quote.status = 'sent';
       quote.sentAt = new Date();
-      await quote.save();
     }
+    
+    await quote.save();
     
     res.json({ 
       success: true,

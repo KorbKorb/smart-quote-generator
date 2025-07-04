@@ -579,3 +579,36 @@ input[type="number"] {
   border-color: var(--gray-600);
   color: var(--gray-200);
 }
+
+/* Action buttons */
+.quotes-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.quotes-table .btn-ghost {
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.quotes-table .btn-ghost:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+.quotes-table .btn-ghost svg {
+  width: 16px;
+  height: 16px;
+}

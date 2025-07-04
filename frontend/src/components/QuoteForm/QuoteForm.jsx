@@ -629,7 +629,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .dxf-info {
           background: #f0f8ff;
           border: 1px solid #0066cc;

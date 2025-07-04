@@ -1,9 +1,7 @@
 // backend/src/utils/pdfGenerator.js
 const puppeteer = require('puppeteer');
-const QRCode = require('qrcode');
 const fs = require('fs').promises;
 const path = require('path');
-const handlebars = require('handlebars');
 
 class PDFGenerator {
   constructor() {
@@ -28,8 +26,8 @@ class PDFGenerator {
    */
   async generateQuotePDF(quote) {
     try {
-      // Generate QR code for quote acceptance
-      const qrCodeUrl = await this.generateQRCode(quote._id);
+      // Generate QR code placeholder (will implement when qrcode package is installed)
+      const qrCodeUrl = null; // await this.generateQRCode(quote._id);
       
       // Prepare template data
       const templateData = {
@@ -53,20 +51,11 @@ class PDFGenerator {
           email: 'quotes@smartmfg.com',
           website: 'www.smartmfg.com',
           logo: await this.getBase64Logo()
-        },
-        // Format currency helper
-        formatCurrency: (amount) => {
-          return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-          }).format(parseFloat(amount) || 0);
         }
       };
 
-      // Load and compile template
-      const htmlTemplate = await this.loadTemplate();
-      const template = handlebars.compile(htmlTemplate);
-      const html = template(templateData);
+      // Generate HTML from template
+      const html = this.generateHTML(templateData);
 
       // Launch Puppeteer
       const browser = await puppeteer.launch({
@@ -114,16 +103,19 @@ class PDFGenerator {
    */
   async generateQRCode(quoteId) {
     try {
-      const url = `${this.baseUrl}/quotes/${quoteId}/accept`;
-      const qrCodeDataUrl = await QRCode.toDataURL(url, {
-        width: 150,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-      return qrCodeDataUrl;
+      // Will implement when qrcode package is installed
+      // const QRCode = require('qrcode');
+      // const url = `${this.baseUrl}/quotes/${quoteId}/accept`;
+      // const qrCodeDataUrl = await QRCode.toDataURL(url, {
+      //   width: 150,
+      //   margin: 2,
+      //   color: {
+      //     dark: '#000000',
+      //     light: '#FFFFFF'
+      //   }
+      // });
+      // return qrCodeDataUrl;
+      return null;
     } catch (error) {
       console.error('Error generating QR code:', error);
       return null;
@@ -136,7 +128,6 @@ class PDFGenerator {
   async getBase64Logo() {
     try {
       // For now, return a placeholder SVG logo
-      // In production, read actual logo file
       const svgLogo = `
         <svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
           <rect width="200" height="60" fill="#667eea" rx="8"/>
@@ -153,11 +144,100 @@ class PDFGenerator {
   }
 
   /**
-   * Load HTML template
+   * Generate 2D part preview
    */
-  async loadTemplate() {
-    // Return inline template for now
-    // In production, load from file
+  generatePartPreview(dxfData) {
+    if (!dxfData || !dxfData.boundingBox) return '';
+
+    const { width, height } = dxfData.boundingBox;
+    const scale = Math.min(200 / width, 200 / height);
+    const svgWidth = width * scale;
+    const svgHeight = height * scale;
+
+    let svg = `<svg width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+    
+    // Draw outline (simplified rectangle for now)
+    svg += `<rect x="0" y="0" width="${width}" height="${height}" fill="none" stroke="#333" stroke-width="2"/>`;
+    
+    // Draw holes if any
+    if (dxfData.holes && dxfData.holes.length > 0) {
+      dxfData.holes.forEach(hole => {
+        svg += `<circle cx="${hole.x}" cy="${hole.y}" r="${hole.diameter / 2}" fill="none" stroke="#ff4444" stroke-width="1.5"/>`;
+      });
+    }
+    
+    // Draw bend lines if any
+    if (dxfData.bendLines && dxfData.bendLines.length > 0) {
+      dxfData.bendLines.forEach(bend => {
+        svg += `<line x1="${bend.startPoint.x}" y1="${bend.startPoint.y}" x2="${bend.endPoint.x}" y2="${bend.endPoint.y}" stroke="#4444ff" stroke-width="1" stroke-dasharray="5,5"/>`;
+      });
+    }
+    
+    svg += '</svg>';
+    
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  }
+
+  /**
+   * Generate HTML from template data
+   */
+  generateHTML(data) {
+    const { quote, qrCodeUrl, generatedDate, validUntil, companyInfo } = data;
+    
+    // Generate items rows with proper calculations
+    const itemsRows = (quote.items || []).map(item => {
+      const unitPrice = item.pricing?.costs?.total && item.quantity ? 
+        (item.pricing.costs.total / item.quantity).toFixed(2) : '0.00';
+      const totalPrice = item.pricing?.costs?.total ? 
+        item.pricing.costs.total.toFixed(2) : '0.00';
+      
+      // Generate part preview if DXF data is available
+      const partPreview = item.dxfData ? this.generatePartPreview(item.dxfData) : null;
+      
+      return `
+        <tr>
+          <td>
+            <div class="part-info">
+              <strong>${item.partName || 'Part'}</strong>
+              ${item.pricing?.details?.measurementSource ? `
+                <div class="measurement-type ${item.pricing.details.measurementSource}">
+                  ${item.pricing.details.measurementSource === 'measured' ? 
+                    '✓ Measured from DXF' : '≈ Estimated'}
+                </div>
+              ` : ''}
+              ${partPreview ? `
+                <div class="part-preview-small">
+                  <img src="${partPreview}" alt="Part preview" />
+                </div>
+              ` : ''}
+            </div>
+          </td>
+          <td>${item.material || ''}</td>
+          <td class="text-center">${item.quantity || 1}</td>
+          <td>
+            <div class="part-details">
+              ${item.thickness ? `<div>Thickness: ${item.thickness}"</div>` : ''}
+              ${item.finishType && item.finishType !== 'none' ? `<div>Finish: ${item.finishType}</div>` : ''}
+              ${item.bendComplexity && item.bendComplexity !== 'simple' ? `<div>Bends: ${item.bendComplexity}</div>` : ''}
+              ${item.dxfData?.area ? `<div>Area: ${item.dxfData.area.toFixed(2)} sq in</div>` : ''}
+            </div>
+          </td>
+          <td class="text-right">$${unitPrice}</td>
+          <td class="text-right">$${totalPrice}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Calculate totals and breakdown
+    const subtotal = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.total || 0), 0);
+    const materialCost = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.materialCost || 0), 0);
+    const cuttingCost = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.cuttingCost || 0), 0);
+    const bendCost = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.bendCost || 0), 0);
+    const finishCost = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.finishCost || 0), 0);
+    const setupFees = quote.items.reduce((sum, item) => sum + (item.pricing?.costs?.setupFee || 0), 0);
+    const tax = subtotal * 0.08; // 8% tax
+    const total = subtotal + tax;
+
     return `
 <!DOCTYPE html>
 <html>
@@ -174,12 +254,13 @@ class PDFGenerator {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #333;
       line-height: 1.6;
+      background: white;
     }
     
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 20px;
     }
     
     /* Header */
@@ -189,12 +270,12 @@ class PDFGenerator {
       align-items: start;
       margin-bottom: 40px;
       padding-bottom: 20px;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 3px solid #667eea;
     }
     
     .company-info h1 {
       color: #667eea;
-      font-size: 24px;
+      font-size: 28px;
       margin-bottom: 10px;
     }
     
@@ -211,34 +292,30 @@ class PDFGenerator {
     
     /* Quote Header */
     .quote-header {
-      background: #f9fafb;
-      padding: 20px;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
       margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .quote-title {
-      font-size: 28px;
-      color: #111827;
-      margin-bottom: 10px;
+      font-size: 32px;
+      margin-bottom: 20px;
+      font-weight: 700;
     }
     
     .quote-meta {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
-    }
-    
-    .quote-meta-item {
-      flex: 1;
-      min-width: 150px;
     }
     
     .quote-meta-item label {
       display: block;
       font-size: 12px;
-      color: #6b7280;
+      opacity: 0.9;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 4px;
@@ -246,25 +323,26 @@ class PDFGenerator {
     
     .quote-meta-item value {
       display: block;
-      font-size: 16px;
-      color: #111827;
+      font-size: 18px;
       font-weight: 600;
     }
     
     /* Customer Info */
     .customer-section {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
       margin-bottom: 30px;
     }
     
     .section-title {
-      font-size: 18px;
+      font-size: 20px;
       color: #374151;
       margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
     }
     
-    .customer-info {
+    .customer-info-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px;
@@ -276,6 +354,7 @@ class PDFGenerator {
     
     .customer-field strong {
       color: #374151;
+      font-weight: 600;
     }
     
     /* Items Table */
@@ -287,41 +366,98 @@ class PDFGenerator {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
     }
     
     th {
-      background: #f3f4f6;
-      padding: 12px;
+      background: #667eea;
+      color: white;
+      padding: 15px 12px;
       text-align: left;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
-      color: #374151;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     
     td {
-      padding: 12px;
+      padding: 15px 12px;
       border-bottom: 1px solid #e5e7eb;
       font-size: 14px;
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
     }
     
     .text-right {
       text-align: right;
     }
     
+    .text-center {
+      text-align: center;
+    }
+    
+    .part-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
     .part-details {
       font-size: 12px;
       color: #6b7280;
-      margin-top: 4px;
+      line-height: 1.4;
+    }
+    
+    .part-details div {
+      margin: 2px 0;
+    }
+    
+    .measurement-type {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    
+    .measurement-type.measured {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .measurement-type.estimated {
+      background: #fed7aa;
+      color: #92400e;
+    }
+    
+    .part-preview-small {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .part-preview-small img {
+      max-width: 80px;
+      max-height: 80px;
     }
     
     /* Price Breakdown */
     .price-breakdown {
-      background: #f9fafb;
-      padding: 20px;
+      background: #f3f4f6;
+      padding: 25px;
       border-radius: 8px;
       margin-bottom: 30px;
+    }
+    
+    .price-breakdown h3 {
+      margin-bottom: 15px;
+      color: #374151;
     }
     
     .price-line {
@@ -329,66 +465,86 @@ class PDFGenerator {
       justify-content: space-between;
       padding: 8px 0;
       font-size: 14px;
+      color: #6b7280;
+    }
+    
+    .price-line.subtotal {
+      font-weight: 600;
+      color: #374151;
+      font-size: 16px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 8px;
+      padding-top: 12px;
     }
     
     .price-line.total {
-      border-top: 2px solid #e5e7eb;
-      margin-top: 10px;
-      padding-top: 15px;
-      font-size: 18px;
+      border-top: 2px solid #667eea;
+      margin-top: 8px;
+      padding-top: 12px;
+      font-size: 20px;
       font-weight: 700;
-      color: #111827;
+      color: #667eea;
     }
     
-    /* Footer */
-    .footer {
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    /* Terms and QR Section */
+    .footer-section {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 40px;
       margin-top: 40px;
       padding-top: 30px;
       border-top: 2px solid #e5e7eb;
     }
     
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 40px;
-    }
-    
-    .terms-section {
-      flex: 1;
-    }
-    
-    .terms-section h3 {
+    .terms-section h4 {
       font-size: 16px;
       color: #374151;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     
-    .terms-section ul {
+    .terms-list {
       list-style: none;
-      padding-left: 0;
+      padding: 0;
     }
     
-    .terms-section li {
-      font-size: 12px;
+    .terms-list li {
+      font-size: 13px;
       color: #6b7280;
-      margin-bottom: 6px;
-      padding-left: 16px;
+      margin-bottom: 8px;
+      padding-left: 20px;
       position: relative;
     }
     
-    .terms-section li:before {
+    .terms-list li:before {
       content: "•";
       position: absolute;
-      left: 0;
+      left: 8px;
+      color: #667eea;
     }
     
     .qr-section {
       text-align: center;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
     }
     
     .qr-section img {
       margin-bottom: 10px;
+      max-width: 150px;
     }
     
     .qr-section p {
@@ -396,50 +552,33 @@ class PDFGenerator {
       color: #6b7280;
     }
     
-    /* Status Badge */
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .status-draft {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-    
-    .status-sent {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    
-    .status-accepted {
-      background: #d1fae5;
-      color: #065f46;
-    }
-    
-    .status-rejected {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    
-    /* Part Preview */
-    .part-preview {
-      width: 100%;
-      height: 200px;
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
+    /* Notes Section */
+    .notes-section {
+      background: #fffbeb;
+      border: 1px solid #fbbf24;
+      padding: 15px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 20px 0;
-      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+    
+    .notes-section h4 {
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+    
+    .notes-section p {
+      color: #78350f;
       font-size: 14px;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
     }
   </style>
 </head>
@@ -448,186 +587,163 @@ class PDFGenerator {
     <!-- Header -->
     <div class="header">
       <div class="company-info">
-        <h1>{{companyInfo.name}}</h1>
-        <p>{{companyInfo.address}}</p>
-        <p>{{companyInfo.city}}</p>
-        <p>Phone: {{companyInfo.phone}}</p>
-        <p>Email: {{companyInfo.email}}</p>
+        <h1>${companyInfo.name}</h1>
+        <p>${companyInfo.address}</p>
+        <p>${companyInfo.city}</p>
+        <p>Phone: ${companyInfo.phone}</p>
+        <p>Email: ${companyInfo.email}</p>
+        <p>Web: ${companyInfo.website}</p>
       </div>
-      {{#if companyInfo.logo}}
-        <img src="{{companyInfo.logo}}" alt="Company Logo" class="logo">
-      {{/if}}
+      ${companyInfo.logo ? `<img src="${companyInfo.logo}" alt="Company Logo" class="logo">` : ''}
     </div>
     
     <!-- Quote Header -->
     <div class="quote-header">
-      <h2 class="quote-title">Quote #{{quote._id}}</h2>
+      <h2 class="quote-title">Manufacturing Quote</h2>
       <div class="quote-meta">
         <div class="quote-meta-item">
-          <label>Date</label>
-          <value>{{generatedDate}}</value>
+          <label>Quote Number</label>
+          <value>#${quote._id.slice(-8).toUpperCase()}</value>
+        </div>
+        <div class="quote-meta-item">
+          <label>Issue Date</label>
+          <value>${generatedDate}</value>
         </div>
         <div class="quote-meta-item">
           <label>Valid Until</label>
-          <value>{{validUntil}}</value>
-        </div>
-        <div class="quote-meta-item">
-          <label>Status</label>
-          <value><span class="status-badge status-{{quote.status}}">{{quote.status}}</span></value>
+          <value>${validUntil}</value>
         </div>
       </div>
     </div>
     
     <!-- Customer Information -->
+    ${quote.customer ? `
     <div class="customer-section">
       <h3 class="section-title">Customer Information</h3>
-      <div class="customer-info">
+      <div class="customer-info-grid">
         <div class="customer-field">
-          <strong>Name:</strong> {{quote.customer.name}}
+          <strong>Name:</strong> ${quote.customer.name || ''}
         </div>
         <div class="customer-field">
-          <strong>Company:</strong> {{quote.customer.company}}
+          <strong>Company:</strong> ${quote.customer.company || ''}
         </div>
         <div class="customer-field">
-          <strong>Email:</strong> {{quote.customer.email}}
+          <strong>Email:</strong> ${quote.customer.email || ''}
         </div>
         <div class="customer-field">
-          <strong>Phone:</strong> {{quote.customer.phone}}
+          <strong>Phone:</strong> ${quote.customer.phone || ''}
         </div>
       </div>
     </div>
+    ` : ''}
+    
+    <!-- Notes if any -->
+    ${quote.notes ? `
+    <div class="notes-section">
+      <h4>Special Instructions</h4>
+      <p>${quote.notes}</p>
+    </div>
+    ` : ''}
     
     <!-- Items -->
     <div class="items-section">
-      <h3 class="section-title">Quote Items</h3>
+      <h3 class="section-title">Quote Details</h3>
       <table>
         <thead>
           <tr>
-            <th>Part Name</th>
+            <th>Part Description</th>
             <th>Material</th>
-            <th>Quantity</th>
-            <th>Details</th>
+            <th class="text-center">Qty</th>
+            <th>Specifications</th>
             <th class="text-right">Unit Price</th>
             <th class="text-right">Total</th>
           </tr>
         </thead>
         <tbody>
-          {{#each quote.items}}
-          <tr>
-            <td>
-              {{this.partName}}
-              {{#if this.pricing.details.measurementSource}}
-                <div class="part-details">
-                  {{#if (eq this.pricing.details.measurementSource "measured")}}
-                    ✓ Measured from DXF
-                  {{else}}
-                    ≈ Estimated
-                  {{/if}}
-                </div>
-              {{/if}}
-            </td>
-            <td>{{this.material}}</td>
-            <td>{{this.quantity}}</td>
-            <td>
-              <div class="part-details">
-                {{#if this.thickness}}Thickness: {{this.thickness}}"{{/if}}<br>
-                {{#if this.finishType}}Finish: {{this.finishType}}{{/if}}
-              </div>
-            </td>
-            <td class="text-right">
-              {{#if this.pricing.costs.total}}
-                ${{divide this.pricing.costs.total this.quantity}}
-              {{else}}
-                -
-              {{/if}}
-            </td>
-            <td class="text-right">
-              {{#if this.pricing.costs.total}}
-                ${{this.pricing.costs.total}}
-              {{else}}
-                -
-              {{/if}}
-            </td>
-          </tr>
-          {{/each}}
+          ${itemsRows}
         </tbody>
       </table>
     </div>
     
-    <!-- Part Preview Placeholder -->
-    <div class="part-preview">
-      <span>Part preview will be available in future updates</span>
-    </div>
-    
     <!-- Price Breakdown -->
     <div class="price-breakdown">
-      <h3 class="section-title">Price Breakdown</h3>
-      {{#with quote.items.[0].pricing.costs}}
-        {{#if ../materialCost}}
-        <div class="price-line">
-          <span>Material Cost</span>
-          <span>${{../materialCost}}</span>
-        </div>
-        {{/if}}
-        {{#if ../cuttingCost}}
-        <div class="price-line">
-          <span>Cutting Cost</span>
-          <span>${{../cuttingCost}}</span>
-        </div>
-        {{/if}}
-        {{#if ../pierceCost}}
-        <div class="price-line">
-          <span>Pierce Cost</span>
-          <span>${{../pierceCost}}</span>
-        </div>
-        {{/if}}
-        {{#if ../bendCost}}
-        <div class="price-line">
-          <span>Bending Cost</span>
-          <span>${{../bendCost}}</span>
-        </div>
-        {{/if}}
-        {{#if ../finishCost}}
-        <div class="price-line">
-          <span>Finish Cost</span>
-          <span>${{../finishCost}}</span>
-        </div>
-        {{/if}}
-        {{#if ../rushFee}}
-        <div class="price-line">
-          <span>Rush Fee</span>
-          <span>${{../rushFee}}</span>
-        </div>
-        {{/if}}
-      {{/with}}
-      <div class="price-line total">
-        <span>Total Quote</span>
-        <span>${{quote.totalPrice}}</span>
+      <h3>Price Breakdown</h3>
+      ${materialCost > 0 ? `
+      <div class="price-line">
+        <span>Material Cost</span>
+        <span>$${materialCost.toFixed(2)}</span>
       </div>
+      ` : ''}
+      ${cuttingCost > 0 ? `
+      <div class="price-line">
+        <span>Cutting Cost</span>
+        <span>$${cuttingCost.toFixed(2)}</span>
+      </div>
+      ` : ''}
+      ${bendCost > 0 ? `
+      <div class="price-line">
+        <span>Bending Cost</span>
+        <span>$${bendCost.toFixed(2)}</span>
+      </div>
+      ` : ''}
+      ${finishCost > 0 ? `
+      <div class="price-line">
+        <span>Finishing Cost</span>
+        <span>$${finishCost.toFixed(2)}</span>
+      </div>
+      ` : ''}
+      ${setupFees > 0 ? `
+      <div class="price-line">
+        <span>Setup Fees</span>
+        <span>$${setupFees.toFixed(2)}</span>
+      </div>
+      ` : ''}
+      <div class="price-line subtotal">
+        <span>Subtotal</span>
+        <span>$${subtotal.toFixed(2)}</span>
+      </div>
+      <div class="price-line">
+        <span>Tax (8%)</span>
+        <span>$${tax.toFixed(2)}</span>
+      </div>
+      <div class="price-line total">
+        <span>Total Amount</span>
+        <span>$${total.toFixed(2)}</span>
+      </div>
+    </div>
+    
+    <!-- Terms and QR Code -->
+    <div class="footer-section">
+      <div class="terms-section">
+        <h4>Terms & Conditions</h4>
+        <ul class="terms-list">
+          <li>This quote is valid for 30 days from the issue date</li>
+          <li>50% deposit required to begin production</li>
+          <li>Lead time: 5-7 business days after approval</li>
+          <li>Prices subject to material market fluctuations</li>
+          <li>Shipping costs not included unless specified</li>
+          <li>All parts manufactured to industry standard tolerances</li>
+        </ul>
+      </div>
+      ${qrCodeUrl ? `
+      <div class="qr-section">
+        <img src="${qrCodeUrl}" alt="QR Code" />
+        <p>Scan to accept quote online</p>
+      </div>
+      ` : `
+      <div class="qr-section">
+        <p><strong>To accept this quote:</strong></p>
+        <p>Email: ${companyInfo.email}</p>
+        <p>Phone: ${companyInfo.phone}</p>
+        <p>Reference Quote #${quote._id.slice(-8).toUpperCase()}</p>
+      </div>
+      `}
     </div>
     
     <!-- Footer -->
     <div class="footer">
-      <div class="footer-content">
-        <div class="terms-section">
-          <h3>Terms & Conditions</h3>
-          <ul>
-            <li>This quote is valid for 30 days from the date of issue</li>
-            <li>Prices are subject to change based on material market conditions</li>
-            <li>Lead times are estimated and may vary based on current workload</li>
-            <li>Payment terms: Net 30 days from invoice date</li>
-            <li>Minimum order value: $100</li>
-            <li>All custom parts are non-returnable</li>
-            <li>Tolerances as specified or industry standard unless otherwise noted</li>
-          </ul>
-        </div>
-        {{#if qrCodeUrl}}
-        <div class="qr-section">
-          <img src="{{qrCodeUrl}}" alt="QR Code" width="150" height="150">
-          <p>Scan to accept<br>this quote online</p>
-        </div>
-        {{/if}}
-      </div>
+      <p>Thank you for the opportunity to quote on your project!</p>
+      <p>${companyInfo.name} • ${companyInfo.address}, ${companyInfo.city}</p>
     </div>
   </div>
 </body>
@@ -635,12 +751,5 @@ class PDFGenerator {
     `;
   }
 }
-
-// Register Handlebars helpers
-handlebars.registerHelper('eq', (a, b) => a === b);
-handlebars.registerHelper('divide', (a, b) => {
-  const result = parseFloat(a) / parseFloat(b);
-  return result.toFixed(2);
-});
 
 module.exports = new PDFGenerator();

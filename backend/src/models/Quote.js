@@ -132,6 +132,17 @@ const quoteSchema = new mongoose.Schema({
   },
   sentAt: Date,
   respondedAt: Date,
+  emailSentAt: Date,
+  emailSentTo: String,
+  emailOpened: {
+    type: Boolean,
+    default: false,
+  },
+  emailOpenedAt: Date,
+  emailStatus: {
+    type: String,
+    enum: ['pending', 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'failed'],
+  },
 });
 
 // Validation function for array minimum length
