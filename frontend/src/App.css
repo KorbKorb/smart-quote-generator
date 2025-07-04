@@ -1,5 +1,6 @@
 /* Import Design System */
 @import './styles/design-system.css';
+@import './styles/pine-theme-overrides.css';
 
 /* App Container */
 .App {
@@ -104,6 +105,14 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
+}
+
+/* Ensure breadcrumbs span full width */
+.page-container .breadcrumbs {
+  margin-left: -2rem;
+  margin-right: -2rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 /* Page Header */

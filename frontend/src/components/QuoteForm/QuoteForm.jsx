@@ -1,6 +1,6 @@
 // frontend/src/components/QuoteForm/QuoteForm.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { quoteAPI } from '../../utils/api';
 import DXFViewer3D from '../DXFViewer3D/DXFViewer3D';
 
 const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
@@ -28,10 +28,8 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:5000/api/quotes/materials'
-        );
-        setMaterials(response.data);
+        const response = await quoteAPI.getMaterials();
+        setMaterials(response.data.data || response.data);
       } catch (error) {
         console.error('Error loading materials:', error);
         // Fallback to hardcoded materials if API fails
@@ -69,18 +67,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
       setError('');
 
       try {
-        const formData = new FormData();
-        formData.append('file', dxfFile);
-
-        const response = await axios.post(
-          'http://localhost:5000/api/quotes/analyze-dxf',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        const response = await quoteAPI.analyzeDXF(dxfFile);
 
         if (response.data.success) {
           setDxfData(response.data.data);
@@ -142,13 +129,8 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         dxfData: dxfData, // Include DXF analysis data
       };
 
-      console.log('Sending item for calculation:', item);
-
       // Send in the format the backend expects
-      const response = await axios.post(
-        'http://localhost:5000/api/quotes/calculate',
-        { items: [item] } // Wrap in items array
-      );
+      const response = await quoteAPI.calculateQuote([item]);
 
       console.log('Calculate response:', response.data);
 

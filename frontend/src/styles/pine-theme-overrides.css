@@ -1,0 +1,410 @@
+/* Pine Green Theme Override for Design System */
+
+/* Override primary colors with Pine Green */
+:root {
+  /* Primary Colors - Pine Green */
+  --primary-gradient: var(--gradient-primary);
+  --primary-dark: var(--pine-green-dark);
+  --primary-light: var(--pine-green-light);
+  --primary-50: var(--pine-green-faint);
+  --primary-100: var(--pine-green-pale);
+  --primary-500: var(--pine-green-light);
+  --primary-600: var(--pine-green-primary);
+  --primary-700: var(--pine-green-dark);
+
+  /* Update grays to work better with Pine Green */
+  --gray-50: var(--neutral-50);
+  --gray-100: var(--neutral-100);
+  --gray-200: var(--neutral-200);
+  --gray-300: var(--neutral-300);
+  --gray-400: var(--neutral-400);
+  --gray-500: var(--neutral-500);
+  --gray-600: var(--neutral-600);
+  --gray-700: var(--neutral-700);
+  --gray-800: var(--neutral-800);
+  --gray-900: var(--neutral-900);
+}
+
+/* Update body background */
+body {
+  background: linear-gradient(to bottom right, var(--neutral-50), var(--pine-green-pale));
+  color: var(--neutral-900);
+}
+
+/* Button overrides */
+.btn {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary {
+  background: var(--pine-green-primary);
+  color: white;
+  border: 1px solid var(--pine-green-primary);
+}
+
+.btn-primary:hover {
+  background: var(--pine-green-dark);
+  border-color: var(--pine-green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 77, 70, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--accent-cool);
+  color: white;
+  border: 1px solid var(--accent-cool);
+}
+
+.btn-secondary:hover {
+  background: var(--accent-cool-dark);
+  border-color: var(--accent-cool-dark);
+}
+
+.btn-cta {
+  background: var(--accent-warm);
+  color: white;
+  border: 1px solid var(--accent-warm);
+}
+
+.btn-cta:hover {
+  background: var(--accent-warm-dark);
+  border-color: var(--accent-warm-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 117, 89, 0.3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--pine-green-primary);
+  border: 1px solid var(--pine-green-primary);
+}
+
+.btn-ghost:hover {
+  background: var(--pine-green-pale);
+  color: var(--pine-green-dark);
+}
+
+/* Form controls */
+input, select, textarea {
+  border-color: var(--neutral-300);
+  background-color: white;
+  color: var(--neutral-900);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--pine-green-primary);
+  box-shadow: 0 0 0 3px rgba(26, 77, 70, 0.1);
+  outline: none;
+}
+
+/* Links */
+a {
+  color: var(--pine-green-primary);
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--pine-green-dark);
+}
+
+/* Navigation updates */
+.navbar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.nav-logo {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-link {
+  color: var(--neutral-700);
+}
+
+.nav-link:hover {
+  color: var(--pine-green-primary);
+  background: var(--pine-green-pale);
+}
+
+.nav-link.active {
+  color: var(--pine-green-primary);
+  background: var(--pine-green-pale);
+}
+
+.nav-link.active::after {
+  background: var(--gradient-primary);
+}
+
+/* Card styles */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--neutral-200);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Stats cards */
+.stat-card {
+  background: white;
+  border: 1px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+  border-color: var(--pine-green-light);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+  background: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.stat-icon.success {
+  background: var(--success-pale);
+  color: var(--success);
+}
+
+.stat-icon.warning {
+  background: var(--warning-pale);
+  color: var(--warning);
+}
+
+.stat-icon.primary {
+  background: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+/* Badges */
+.badge {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-success {
+  background: var(--success-pale);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-pale);
+  color: var(--warning);
+}
+
+.badge-error {
+  background: var(--error-pale);
+  color: var(--error);
+}
+
+.badge-info {
+  background: var(--info-pale);
+  color: var(--info);
+}
+
+/* Table styles */
+table {
+  border-collapse: collapse;
+}
+
+th {
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+tr:hover {
+  background: var(--pine-green-faint);
+}
+
+/* Loading spinner */
+.loading-spinner {
+  border-color: var(--neutral-200);
+  border-top-color: var(--pine-green-primary);
+}
+
+/* Trends */
+.trend-up {
+  color: var(--success);
+}
+
+.trend-down {
+  color: var(--error);
+}
+
+/* Action cards */
+.action-card {
+  background: white;
+  border: 2px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.action-card:hover {
+  border-color: var(--pine-green-primary);
+  background: var(--pine-green-faint);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.action-icon {
+  color: var(--pine-green-primary);
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  background-color: white;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.breadcrumb-link {
+  color: var(--neutral-600);
+}
+
+.breadcrumb-link:hover {
+  color: var(--pine-green-primary);
+  background-color: var(--pine-green-pale);
+}
+
+.breadcrumb-current {
+  color: var(--pine-green-primary);
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  color: var(--neutral-300);
+}
+
+/* Customer Portal specific */
+.login-container,
+.register-container {
+  background: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--pine-green-light) 100%);
+}
+
+.portal-sidebar {
+  background-color: white;
+  border-right: 1px solid var(--neutral-200);
+}
+
+.nav-item {
+  color: var(--neutral-700);
+}
+
+.nav-item:hover {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.nav-item-active {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.nav-item-active::before {
+  background-color: var(--pine-green-primary);
+}
+
+.user-avatar {
+  background-color: var(--pine-green-primary);
+}
+
+.logout-button:hover {
+  background-color: var(--error-pale);
+  border-color: var(--error-light);
+  color: var(--error);
+}
+
+/* Success page */
+.success-container {
+  background: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--accent-cool) 100%);
+}
+
+.success-icon-wrapper {
+  background-color: var(--success-pale);
+}
+
+.success-icon {
+  color: var(--success);
+}
+
+/* Forms */
+.form-input:focus {
+  border-color: var(--pine-green-primary);
+  box-shadow: 0 0 0 3px rgba(26, 77, 70, 0.1);
+}
+
+.password-strength .strength-fill {
+  transition: all 0.3s ease;
+}
+
+/* Quote display */
+.price-breakdown {
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+}
+
+.measurement-badge.measured {
+  background: var(--success-pale);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.measurement-badge.estimated {
+  background: var(--warning-pale);
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+/* Modal */
+.modal-overlay {
+  background: rgba(26, 77, 70, 0.5);
+}
+
+.modal-content {
+  box-shadow: 0 20px 25px -5px rgba(26, 77, 70, 0.2);
+}
+
+/* DXF Info */
+.dxf-info {
+  background: linear-gradient(135deg, rgba(26, 77, 70, 0.05) 0%, rgba(111, 163, 160, 0.05) 100%);
+  border: 1px solid rgba(26, 77, 70, 0.2);
+}
+
+.dxf-info h4 {
+  color: var(--pine-green-dark);
+}
+
+.dxf-metric {
+  background: white;
+  border: 1px solid var(--neutral-200);
+}
+
+.dxf-metric:hover {
+  border-color: var(--pine-green-light);
+  box-shadow: var(--shadow-md);
+}
+
+/* Complexity colors */
+.complexity-simple { color: var(--success); }
+.complexity-moderate { color: var(--warning); }
+.complexity-complex { color: var(--error); }

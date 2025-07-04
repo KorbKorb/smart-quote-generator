@@ -21,12 +21,12 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/quotes');
-      const quotes = response.data;
+      const quotesData = response.data.data || []; // Extract the data array from the response
       
       // Calculate statistics
-      const totalQuotes = quotes.length;
-      const acceptedQuotes = quotes.filter(q => q.status === 'accepted').length;
-      const totalValue = quotes
+      const totalQuotes = quotesData.length;
+      const acceptedQuotes = quotesData.filter(q => q.status === 'accepted').length;
+      const totalValue = quotesData
         .filter(q => q.status === 'accepted')
         .reduce((sum, q) => sum + (parseFloat(q.totalPrice) || 0), 0);
       const conversionRate = totalQuotes > 0 ? (acceptedQuotes / totalQuotes) * 100 : 0;
@@ -36,7 +36,7 @@ const Dashboard = () => {
         acceptedQuotes,
         totalValue,
         conversionRate,
-        recentQuotes: quotes.slice(0, 5)
+        recentQuotes: quotesData.slice(0, 5)
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -84,7 +84,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <div className="dashboard-header">
         <h1>Dashboard</h1>
-        <Link to="/quotes/new" className="btn btn-primary">
+        <Link to="/admin/new-quote" className="btn btn-primary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <line x1="12" y1="5" x2="12" y2="19" strokeWidth="2" strokeLinecap="round" />
             <line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" strokeLinecap="round" />
@@ -174,7 +174,7 @@ const Dashboard = () => {
       <div className="quick-actions">
         <h2>Quick Actions</h2>
         <div className="action-cards">
-          <Link to="/quotes/new" className="action-card">
+          <Link to="/admin/new-quote" className="action-card">
             <div className="action-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -186,7 +186,7 @@ const Dashboard = () => {
             <p>Start a new quotation</p>
           </Link>
 
-          <Link to="/quotes" className="action-card">
+          <Link to="/admin/quotes" className="action-card">
             <div className="action-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -229,7 +229,7 @@ const Dashboard = () => {
       <div className="recent-quotes">
         <div className="section-header">
           <h2>Recent Quotes</h2>
-          <Link to="/quotes" className="btn btn-ghost">View All</Link>
+          <Link to="/admin/quotes" className="btn btn-ghost">View All</Link>
         </div>
         
         {stats.recentQuotes.length > 0 ? (
@@ -254,11 +254,11 @@ const Dashboard = () => {
                     <td>
                       <div className="customer-info">
                         <div className="customer-avatar">
-                          {quote.customer.name.charAt(0).toUpperCase()}
+                          {(quote.customerName || quote.customerEmail || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="customer-name">{quote.customer.name}</div>
-                          <div className="customer-company">{quote.customer.company}</div>
+                          <div className="customer-name">{quote.customerName || 'Unknown'}</div>
+                          <div className="customer-company">{quote.customerCompany || quote.customerEmail || ''}</div>
                         </div>
                       </div>
                     </td>
@@ -270,7 +270,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td>
-                      <Link to={`/quotes/${quote._id}`} className="btn btn-ghost btn-sm">
+                      <Link to={`/admin/quotes/${quote._id}`} className="btn btn-ghost btn-sm">
                         View
                       </Link>
                     </td>
@@ -287,7 +287,7 @@ const Dashboard = () => {
             </svg>
             <h3>No quotes yet</h3>
             <p>Create your first quote to get started</p>
-            <Link to="/quotes/new" className="btn btn-primary">
+            <Link to="/admin/new-quote" className="btn btn-primary">
               Create Quote
             </Link>
           </div>

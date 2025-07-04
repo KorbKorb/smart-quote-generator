@@ -1,4 +1,5 @@
 /* Global Typography Adjustments for Customer Portal */
+@import './pine-theme.css';
 
 /* Adjust base font sizes for better readability with serif */
 .login-container,

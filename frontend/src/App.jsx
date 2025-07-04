@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import NewQuote from './pages/NewQuote';
 import QuoteHistory from './pages/QuoteHistory';
 import QuoteDetail from './pages/QuoteDetail';
+import Breadcrumbs from './components/Breadcrumbs';
 
 // Customer Portal imports
 import { CustomerAuthProvider } from './customer-portal/contexts/CustomerAuthContext';
@@ -60,12 +61,15 @@ function AdminApp() {
       </nav>
 
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/new-quote" element={<NewQuote />} />
-          <Route path="/quotes" element={<QuoteHistory />} />
-          <Route path="/quotes/:id" element={<QuoteDetail />} />
-        </Routes>
+        <div className="page-container">
+          <Breadcrumbs />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/new-quote" element={<NewQuote />} />
+            <Route path="/quotes" element={<QuoteHistory />} />
+            <Route path="/quotes/:id" element={<QuoteDetail />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );

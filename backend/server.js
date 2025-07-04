@@ -9,6 +9,7 @@ dotenv.config();
 // Import routes
 const customerAuthRoutes = require('./routes/customerAuth');
 const customerApiRoutes = require('./routes/customerApi');
+const adminQuotesRoutes = require('./routes/adminQuotes');
 
 // Create Express app
 const app = express();
@@ -29,6 +30,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-quo
 // Routes
 app.use('/api/auth/customer', customerAuthRoutes);
 app.use('/api/customer', customerApiRoutes);
+app.use('/api/quotes', adminQuotesRoutes); // Admin quotes routes
 
 // Health check route
 app.get('/api/health', (req, res) => {

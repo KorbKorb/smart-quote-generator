@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useCustomerAuth } from '../contexts/CustomerAuthContext';
+import Breadcrumbs from '../../components/Breadcrumbs';
 import './PortalLayout.css';
 
 const PortalLayout = () => {
@@ -138,7 +139,10 @@ const PortalLayout = () => {
 
       {/* Main content */}
       <main className="portal-main">
-        <Outlet />
+        <div className="portal-content">
+          <Breadcrumbs />
+          <Outlet />
+        </div>
       </main>
     </div>
   );

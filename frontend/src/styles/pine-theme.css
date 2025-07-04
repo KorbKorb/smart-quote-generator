@@ -1,0 +1,90 @@
+/* Pine Green Theme Color System */
+:root {
+  /* Primary Pine Green Colors */
+  --pine-green-primary: #1A4D46;      /* Main Pine Green */
+  --pine-green-dark: #0F2E2A;         /* Darker variant */
+  --pine-green-light: #2A6D64;        /* Lighter variant */
+  --pine-green-pale: #E8F0EF;         /* Very light tint for backgrounds */
+  --pine-green-faint: #F5F9F8;        /* Extremely light for subtle backgrounds */
+
+  /* Accent Colors */
+  /* Warm Accent - Terracotta/Coral */
+  --accent-warm: #D97559;             /* CTAs, important buttons */
+  --accent-warm-light: #E8A593;       /* Hover states */
+  --accent-warm-dark: #C4614D;        /* Active states */
+  --accent-warm-pale: #FAF0ED;        /* Light backgrounds */
+  
+  /* Cool Accent - Sky Blue */
+  --accent-cool: #6FA3A0;             /* Secondary actions, info */
+  --accent-cool-light: #9FC4C2;       /* Hover states */
+  --accent-cool-dark: #5A8A87;        /* Active states */
+  --accent-cool-pale: #EFF6F6;        /* Light backgrounds */
+
+  /* Neutral Colors */
+  --neutral-900: #1A1A1A;             /* Primary text */
+  --neutral-800: #2D2D2D;             /* Headings */
+  --neutral-700: #404040;             /* Secondary text */
+  --neutral-600: #595959;             /* Muted text */
+  --neutral-500: #737373;             /* Borders */
+  --neutral-400: #A6A6A6;             /* Disabled states */
+  --neutral-300: #D9D9D9;             /* Light borders */
+  --neutral-200: #E6E6E6;             /* Subtle backgrounds */
+  --neutral-100: #F5F5F5;             /* Light backgrounds */
+  --neutral-50: #FAFAFA;              /* Very light backgrounds */
+  --white: #FFFFFF;                   /* Pure white */
+
+  /* Semantic Colors */
+  --success: #2E7D32;                 /* Success states */
+  --success-light: #4CAF50;           /* Success hover */
+  --success-pale: #E8F5E9;            /* Success background */
+  
+  --warning: #ED6C02;                 /* Warning states */
+  --warning-light: #FF9800;           /* Warning hover */
+  --warning-pale: #FFF3E0;            /* Warning background */
+  
+  --error: #D32F2F;                   /* Error states */
+  --error-light: #F44336;             /* Error hover */
+  --error-pale: #FFEBEE;              /* Error background */
+  
+  --info: #0288D1;                    /* Information */
+  --info-light: #03A9F4;              /* Info hover */
+  --info-pale: #E1F5FE;               /* Info background */
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(26, 77, 70, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(26, 77, 70, 0.1), 0 1px 2px 0 rgba(26, 77, 70, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(26, 77, 70, 0.1), 0 2px 4px -1px rgba(26, 77, 70, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 77, 70, 0.1), 0 4px 6px -2px rgba(26, 77, 70, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(26, 77, 70, 0.1), 0 10px 10px -5px rgba(26, 77, 70, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(26, 77, 70, 0.25);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--pine-green-light) 100%);
+  --gradient-warm: linear-gradient(135deg, var(--accent-warm) 0%, var(--accent-warm-light) 100%);
+  --gradient-cool: linear-gradient(135deg, var(--accent-cool) 0%, var(--accent-cool-light) 100%);
+  --gradient-subtle: linear-gradient(135deg, var(--pine-green-pale) 0%, var(--neutral-50) 100%);
+
+  /* Component-specific variables */
+  --button-primary-bg: var(--pine-green-primary);
+  --button-primary-hover: var(--pine-green-dark);
+  --button-primary-active: var(--pine-green-dark);
+  
+  --button-secondary-bg: var(--accent-cool);
+  --button-secondary-hover: var(--accent-cool-dark);
+  
+  --button-cta-bg: var(--accent-warm);
+  --button-cta-hover: var(--accent-warm-dark);
+  
+  --link-color: var(--pine-green-primary);
+  --link-hover: var(--pine-green-dark);
+  
+  --input-border: var(--neutral-300);
+  --input-focus-border: var(--pine-green-primary);
+  --input-focus-shadow: rgba(26, 77, 70, 0.2);
+  
+  --nav-bg: var(--white);
+  --nav-border: var(--neutral-200);
+  --nav-link: var(--neutral-700);
+  --nav-link-hover: var(--pine-green-primary);
+  --nav-link-active: var(--pine-green-primary);
+}

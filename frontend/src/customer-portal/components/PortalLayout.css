@@ -211,6 +211,12 @@
   background-color: #f7fafc;
 }
 
+.portal-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
 /* Overlay for mobile */
 .sidebar-overlay {
   display: none;

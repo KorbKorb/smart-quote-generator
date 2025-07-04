@@ -1,0 +1,321 @@
+/* Pine Theme Updates for Customer Portal Pages */
+
+/* Login Page */
+.login-container {
+  background: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--accent-cool) 100%);
+}
+
+.login-card,
+.register-card {
+  box-shadow: 0 20px 40px rgba(26, 77, 70, 0.2);
+}
+
+.login-features h2,
+.register-benefits h2 {
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.features-list li,
+.benefit-item {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.feature-icon {
+  color: var(--accent-cool-light);
+}
+
+.benefit-icon {
+  color: var(--accent-cool-light);
+}
+
+/* Register Page */
+.register-container {
+  background: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--pine-green-light) 100%);
+}
+
+.step.active .step-number {
+  background-color: var(--pine-green-primary);
+  box-shadow: 0 4px 12px rgba(26, 77, 70, 0.3);
+}
+
+.step.active .step-label {
+  color: var(--pine-green-primary);
+}
+
+.progress-steps .step-line {
+  background-color: var(--neutral-200);
+}
+
+/* Password strength colors remain semantic */
+.password-strength .strength-fill {
+  transition: width 0.3s, background-color 0.3s;
+}
+
+/* Dashboard */
+.dashboard-container {
+  color: var(--neutral-900);
+}
+
+.stat-icon-blue {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.stat-icon-yellow {
+  background-color: var(--warning-pale);
+  color: var(--warning);
+}
+
+.stat-icon-green {
+  background-color: var(--success-pale);
+  color: var(--success);
+}
+
+.stat-icon-purple {
+  background-color: var(--accent-cool-pale);
+  color: var(--accent-cool);
+}
+
+.stat-card:hover {
+  box-shadow: 0 8px 20px rgba(26, 77, 70, 0.1);
+}
+
+.quick-action-card {
+  border: 2px solid var(--neutral-200);
+}
+
+.quick-action-card:hover {
+  border-color: var(--pine-green-primary);
+  background: var(--pine-green-faint);
+  box-shadow: 0 12px 24px rgba(26, 77, 70, 0.15);
+}
+
+.action-icon {
+  color: var(--pine-green-primary);
+}
+
+.view-all-link {
+  color: var(--pine-green-primary);
+}
+
+.view-all-link:hover {
+  color: var(--pine-green-dark);
+}
+
+.quote-number a {
+  color: var(--pine-green-primary);
+}
+
+.quote-number a:hover {
+  color: var(--pine-green-dark);
+}
+
+.action-link {
+  color: var(--pine-green-primary);
+}
+
+.action-link:hover {
+  color: var(--pine-green-dark);
+}
+
+/* Badges with Pine theme */
+.badge-gray {
+  background-color: var(--neutral-100);
+  color: var(--neutral-600);
+}
+
+.badge-yellow {
+  background-color: var(--warning-pale);
+  color: var(--warning);
+}
+
+.badge-blue {
+  background-color: var(--info-pale);
+  color: var(--info);
+}
+
+.badge-green {
+  background-color: var(--success-pale);
+  color: var(--success);
+}
+
+.badge-red {
+  background-color: var(--error-pale);
+  color: var(--error);
+}
+
+/* Forms with Pine theme */
+.form-input {
+  border: 2px solid var(--neutral-200);
+  background-color: white;
+}
+
+.form-input:focus {
+  border-color: var(--pine-green-primary);
+  box-shadow: 0 0 0 3px rgba(26, 77, 70, 0.1);
+}
+
+.form-input.error {
+  border-color: var(--error);
+  background-color: var(--error-pale);
+}
+
+.checkbox-input {
+  accent-color: var(--pine-green-primary);
+}
+
+.forgot-link,
+.register-link,
+.login-link,
+.resend-link {
+  color: var(--pine-green-primary);
+}
+
+.forgot-link:hover,
+.register-link:hover,
+.login-link:hover,
+.resend-link:hover {
+  color: var(--pine-green-dark);
+}
+
+/* Buttons with Pine theme */
+.btn-primary {
+  background-color: var(--pine-green-primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--pine-green-dark);
+  box-shadow: 0 4px 12px rgba(26, 77, 70, 0.3);
+}
+
+.btn-secondary {
+  background-color: var(--accent-cool);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--accent-cool-dark);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Success page with Pine theme */
+.success-container {
+  background: linear-gradient(135deg, var(--pine-green-primary) 0%, var(--accent-cool) 100%);
+}
+
+.success-icon-wrapper {
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(26, 77, 70, 0.2);
+}
+
+.success-icon {
+  color: var(--pine-green-primary);
+}
+
+.step-number {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.email-notification {
+  background-color: var(--pine-green-faint);
+  border: 1px solid var(--pine-green-pale);
+}
+
+.email-icon {
+  color: var(--pine-green-primary);
+}
+
+/* Portal specific */
+.portal-layout {
+  background-color: var(--neutral-50);
+}
+
+.portal-sidebar {
+  background-color: white;
+  box-shadow: 2px 0 4px rgba(26, 77, 70, 0.05);
+}
+
+.sidebar-header h2 {
+  color: var(--pine-green-primary);
+}
+
+.nav-item {
+  color: var(--neutral-700);
+}
+
+.nav-item:hover {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.nav-item-active {
+  background-color: var(--pine-green-pale);
+  color: var(--pine-green-primary);
+}
+
+.nav-item-active::before {
+  background-color: var(--pine-green-primary);
+}
+
+.user-avatar {
+  background-color: var(--pine-green-primary);
+  color: white;
+}
+
+.logout-button {
+  background-color: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  color: var(--neutral-700);
+}
+
+.logout-button:hover {
+  background-color: var(--error-pale);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* Empty states */
+.empty-icon {
+  color: var(--pine-green-light);
+}
+
+/* Loading states */
+.spinner {
+  border-color: var(--neutral-200);
+  border-top-color: var(--pine-green-primary);
+}
+
+/* Alert styles */
+.alert-error {
+  background-color: var(--error-pale);
+  color: var(--error);
+  border: 1px solid var(--error-light);
+}
+
+.alert-success {
+  background-color: var(--success-pale);
+  color: var(--success);
+  border: 1px solid var(--success-light);
+}
+
+.alert-warning {
+  background-color: var(--warning-pale);
+  color: var(--warning);
+  border: 1px solid var(--warning-light);
+}
+
+.alert-info {
+  background-color: var(--info-pale);
+  color: var(--info);
+  border: 1px solid var(--info-light);
+}
