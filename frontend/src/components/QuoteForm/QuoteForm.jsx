@@ -1,6 +1,7 @@
 // frontend/src/components/QuoteForm/QuoteForm.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import DXFViewer3D from '../DXFViewer3D/DXFViewer3D';
 
 const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
   const [formData, setFormData] = useState({
@@ -285,11 +286,18 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
 
         {/* DXF Analysis Status */}
         {analyzingDXF && (
-          <div className="info-message">Analyzing DXF file...</div>
+        <div className="info-message">Analyzing DXF file...</div>
         )}
 
+        {/* 3D Viewer */}
         {dxfData && (
-          <div className="dxf-info">
+        <div className="dxf-viewer-section">
+          <DXFViewer3D dxfData={dxfData} height="500px" />
+        </div>
+      )}
+
+      {dxfData && (
+        <div className="dxf-info">
             <h4>DXF Analysis Results</h4>
             <div className="dxf-details">
               <div className="dxf-metric">
@@ -737,8 +745,13 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
           border-radius: 4px;
           margin-bottom: 16px;
           text-align: center;
-        }
-      `}</style>
+          }
+
+      .dxf-viewer-section {
+        margin-bottom: 2rem;
+        animation: slideUp 0.4s ease-out;
+      }
+    `}</style>
     </>
   );
 };
