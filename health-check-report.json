@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-07-08T03:10:44.846Z",
+  "summary": {
+    "total": 27,
+    "passed": 22,
+    "failed": 3,
+    "warnings": 2
+  },
+  "results": {
+    "passed": [
+      "Frontend directory exists",
+      "Backend directory exists",
+      "Git repository initialized",
+      ".gitignore file exists",
+      "Amplify configuration exists",
+      "Server.js exists",
+      "Backend package.json exists",
+      "Backend package.json is valid JSON",
+      "Railway configuration exists",
+      "Models directory exists",
+      "Routes directory exists",
+      "Middleware directory exists",
+      "Utils directory exists",
+      "Frontend package.json exists",
+      "Frontend package.json is valid JSON",
+      "Frontend index.html exists",
+      "PWA manifest exists",
+      "Axios configuration exists",
+      "Frontend environment variables",
+      "Backend dependencies",
+      "Frontend dependencies",
+      "Git remote configured"
+    ],
+    "failed": [
+      "App.js exists - Missing: frontend/src/App.js",
+      "Backend server not running",
+      "Frontend server not running"
+    ],
+    "warnings": [
+      "Backend environment variables - Missing: JWT_SECRET",
+      "Uncommitted changes in repository"
+    ]
+  },
+  "deploymentReady": false
+}
