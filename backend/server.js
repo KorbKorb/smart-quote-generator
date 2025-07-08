@@ -10,12 +10,45 @@ dotenv.config();
 const customerAuthRoutes = require('./routes/customerAuth');
 const customerApiRoutes = require('./routes/customerApi');
 const adminQuotesRoutes = require('./routes/adminQuotes');
+const packageQuotesRoutes = require('./routes/packageQuotes');
 
 // Create Express app
 const app = express();
 
+// CORS configuration for production
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_URL,
+      // Add Amplify URL when you get it
+      /^https:\/\/.*\.amplifyapp\.com$/
+    ].filter(Boolean);
+    
+    // Allow requests with no origin (like mobile apps)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -31,6 +64,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-quo
 app.use('/api/auth/customer', customerAuthRoutes);
 app.use('/api/customer', customerApiRoutes);
 app.use('/api/quotes', adminQuotesRoutes); // Admin quotes routes
+app.use('/api/package-quotes', packageQuotesRoutes); // Package quotes routes
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -52,5 +86,3 @@ const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-module.exports = app;

@@ -1,0 +1,248 @@
+/* PackageSummary Component Styles */
+.package-summary {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+/* Summary Header */
+.summary-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--neutral-200);
+}
+
+.summary-header h2 {
+  color: var(--pine-green-dark);
+  font-size: 1.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.package-stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--pine-green-primary);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Pricing Breakdown */
+.pricing-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.pricing-section,
+.categories-section {
+  background: var(--neutral-50);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-200);
+}
+
+.pricing-section h3,
+.categories-section h3 {
+  color: var(--pine-green-dark);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+/* Price Lines */
+.price-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.price-line.total {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--pine-green-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.price-label {
+  color: var(--neutral-700);
+}
+
+.price-line.total .price-label {
+  color: var(--pine-green-dark);
+}
+
+.price-value {
+  color: var(--neutral-800);
+  font-weight: 500;
+}
+
+.price-line.total .price-value {
+  color: var(--pine-green-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.discount-line .price-value {
+  color: var(--success);
+}
+
+.discount-detail {
+  font-size: 0.813rem;
+  color: var(--neutral-600);
+  font-style: italic;
+}
+
+/* Savings Banner */
+.savings-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--success-pale);
+  border: 1px solid #C8E6C9;
+  border-radius: 8px;
+}
+
+.savings-icon {
+  font-size: 1.5rem;
+}
+
+.savings-text {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+/* Categories Section */
+.category-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.category-summary-item:last-child {
+  border-bottom: none;
+}
+
+.category-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.category-name {
+  color: var(--neutral-800);
+  font-weight: 500;
+}
+
+.category-items {
+  font-size: 0.813rem;
+  color: var(--neutral-600);
+}
+
+.category-total {
+  color: var(--pine-green-primary);
+  font-weight: 600;
+}
+
+/* Summary Actions */
+.summary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+/* Applied Rules */
+.applied-rules {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--pine-green-faint);
+  border-radius: 8px;
+  border: 1px solid var(--pine-green-pale);
+}
+
+.applied-rules h4 {
+  color: var(--pine-green-dark);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.applied-rules ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: var(--neutral-700);
+  font-size: 0.875rem;
+}
+
+.applied-rules li {
+  margin-bottom: 0.5rem;
+}
+
+.applied-rules strong {
+  color: var(--pine-green-primary);
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .package-summary {
+    padding: 1.5rem;
+  }
+
+  .package-stats {
+    gap: 1.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .pricing-breakdown {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .summary-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .summary-actions .btn {
+    width: 100%;
+  }
+}

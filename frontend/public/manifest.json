@@ -1,6 +1,6 @@
 {
-  "short_name": "Smart Quote",
-  "name": "Smart Quote Generator",
+  "short_name": "HFI Quotes",
+  "name": "HFI Smart Quote Generator",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1A4D46",
+  "background_color": "#ffffff",
+  "orientation": "portrait"
 }

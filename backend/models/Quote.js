@@ -81,6 +81,14 @@ const quoteSchema = new mongoose.Schema({
   rejectionReason: String,
   sentAt: Date,
   createdBy: String,
+  packageQuotes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PackageQuote',
+  }],
+  hasPackages: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

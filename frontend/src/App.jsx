@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import NewQuote from './pages/NewQuote';
 import QuoteHistory from './pages/QuoteHistory';
 import QuoteDetail from './pages/QuoteDetail';
+import PackageQuote from './pages/PackageQuote';
 import Breadcrumbs from './components/Breadcrumbs';
 
 // Customer Portal imports
@@ -56,6 +57,9 @@ function AdminApp() {
             <li className="nav-item">
               <Link to="/admin/quotes" className="nav-link">Quote History</Link>
             </li>
+            <li className="nav-item">
+              <Link to="/admin/package-quote" className="nav-link">Package Quote</Link>
+            </li>
           </ul>
         </div>
       </nav>
@@ -66,6 +70,7 @@ function AdminApp() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/new-quote" element={<NewQuote />} />
+            <Route path="/package-quote" element={<PackageQuote />} />
             <Route path="/quotes" element={<QuoteHistory />} />
             <Route path="/quotes/:id" element={<QuoteDetail />} />
           </Routes>
