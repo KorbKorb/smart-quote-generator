@@ -8,6 +8,7 @@ frontend:
     build:
       commands:
         - npm run build
+        - cp public/_redirects build/_redirects
   artifacts:
     baseDirectory: frontend/build
     files:
@@ -15,12 +16,3 @@ frontend:
   cache:
     paths:
       - frontend/node_modules/**/*
-  customHeaders:
-    - pattern: '**/*'
-      headers:
-        - key: 'X-Frame-Options'
-          value: 'SAMEORIGIN'
-        - key: 'X-Content-Type-Options'
-          value: 'nosniff'
-        - key: 'X-XSS-Protection'
-          value: '1; mode=block'
