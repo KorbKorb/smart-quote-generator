@@ -367,8 +367,10 @@ async function runHealthCheck() {
     deploymentReady: results.failed.length === 0
   };
   
-  fs.writeFileSync('health-check-report.json', JSON.stringify(report, null, 2));
-  log('\n📄 Detailed report saved to: health-check-report.json', 'blue');
+  // Save report to config directory
+  const reportPath = path.join(__dirname, '..', 'config', 'health-check-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  log(`\n📄 Detailed report saved to: ${reportPath}`, 'blue');
 }
 
 // Run the health check

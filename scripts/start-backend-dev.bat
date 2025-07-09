@@ -15,7 +15,7 @@ if %errorlevel% == 0 (
 
 echo.
 echo Starting backend server on port 3002...
-cd backend
+cd ..\backend
 
 REM Check if node_modules exists
 if not exist node_modules (

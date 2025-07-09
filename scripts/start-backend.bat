@@ -2,7 +2,7 @@
 echo Starting Smart Quote Generator Backend...
 echo.
 
-cd backend
+cd ..\backend
 
 echo Installing dependencies...
 call npm install
