@@ -4,7 +4,11 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Load environment variables
-dotenv.config();
+// In production (Railway), environment variables are already set
+// Only load .env file in development
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 // Import routes
 const customerAuthRoutes = require('./routes/customerAuth');
@@ -82,7 +86,21 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
+// Railway provides PORT automatically
 const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
 });
