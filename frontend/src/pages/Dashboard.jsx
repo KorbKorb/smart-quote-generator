@@ -20,7 +20,7 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/quotes');
+      const response = await axios.get('/api/quotes');
       const quotesData = response.data.data || []; // Extract the data array from the response
       
       // Calculate statistics
