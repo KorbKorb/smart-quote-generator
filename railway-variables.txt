@@ -1,0 +1,39 @@
+# Railway Environment Variables Checklist
+
+Copy and paste these EXACTLY into Railway Variables tab:
+
+## Required Variables:
+
+### 1. MONGODB_URI
+```
+mongodb+srv://korbin:7TVPNDteXClUVP2b@cluster0.3j07acq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+
+### 2. JWT_SECRET  
+```
+3cd08ee2d36e85d0a56a6dd5ba80a7b27400065b294eb2340e5886e948108260e10f5cdedf93a992f72bf35425b7262e255e11e04fe7c66e7945dbde7be4e844
+```
+
+### 3. FRONTEND_URL
+```
+https://main.dtpbc2f4zygku.amplifyapp.com
+```
+
+### 4. NODE_ENV
+```
+production
+```
+
+## How to Add in Railway:
+1. Go to https://railway.app/dashboard
+2. Click your project
+3. Click the service (backend)
+4. Click "Variables" tab
+5. Click "Add Variable"
+6. Add each variable above
+7. Railway will auto-redeploy
+
+## Check Deployment Settings:
+- Root Directory: /backend
+- Build Command: (leave empty or `npm ci`)
+- Start Command: (leave empty or `npm start`)

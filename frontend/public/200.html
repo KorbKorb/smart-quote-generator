@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Smart Quote Generator</title>
+    <script>
+        // Client-side routing for SPA
+        // This handles refreshes and direct navigation
+        (function() {
+            const path = window.location.pathname;
+            
+            // Don't redirect static assets
+            if (path.includes('/static/') || 
+                path.endsWith('.css') || 
+                path.endsWith('.js') || 
+                path.endsWith('.json') || 
+                path.endsWith('.png') || 
+                path.endsWith('.jpg') || 
+                path.endsWith('.ico')) {
+                return;
+            }
+            
+            // Store the intended path
+            if (path !== '/' && path !== '/index.html') {
+                sessionStorage.setItem('redirect', path);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // After React loads, redirect to intended path
+        window.addEventListener('load', function() {
+            const redirect = sessionStorage.getItem('redirect');
+            if (redirect) {
+                sessionStorage.removeItem('redirect');
+                // Give React time to initialize
+                setTimeout(() => {
+                    window.history.replaceState({}, '', redirect);
+                    // Trigger React Router
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
