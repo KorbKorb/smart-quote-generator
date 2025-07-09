@@ -10,14 +10,36 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
 
-// Import routes
+// Create Express app
+const app = express();
+
+// IMPORTANT: Health check MUST be before any async operations
+// This ensures Railway can check if the app is running
+app.get('/api/health', (req, res) => {
+  const health = {
+    status: 'OK',
+    message: 'Smart Quote Generator API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  };
+  res.json(health);
+});
+
+// Also respond to root path for Railway
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Smart Quote Generator Backend', 
+    health: '/api/health',
+    docs: 'API documentation coming soon'
+  });
+});
+
+// Import routes after health check
 const customerAuthRoutes = require('./routes/customerAuth');
 const customerApiRoutes = require('./routes/customerApi');
 const adminQuotesRoutes = require('./routes/adminQuotes');
 const packageQuotesRoutes = require('./routes/packageQuotes');
-
-// Create Express app
-const app = express();
 
 // CORS configuration for production
 const corsOptions = {
@@ -56,24 +78,19 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-quote-generator', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Request logging in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Routes
 app.use('/api/auth/customer', customerAuthRoutes);
 app.use('/api/customer', customerApiRoutes);
 app.use('/api/quotes', adminQuotesRoutes); // Admin quotes routes
 app.use('/api/package-quotes', packageQuotesRoutes); // Package quotes routes
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -85,17 +102,42 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-// Railway provides PORT automatically
+// Start server FIRST, then connect to MongoDB
+// This ensures Railway can detect the app is running
 const PORT = process.env.PORT || 3002;
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+  console.log(`Health check: http://localhost:${PORT}/api/health`);
+  
+  // Connect to MongoDB AFTER server starts
+  console.log('Connecting to MongoDB...');
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    // Don't exit - let the app run even if DB is down temporarily
+  });
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
   server.close(() => {
     console.log('Server closed');
     mongoose.connection.close(false, () => {
