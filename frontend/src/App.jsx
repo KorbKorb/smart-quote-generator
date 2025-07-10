@@ -5,6 +5,7 @@ import NewQuote from './pages/NewQuote';
 import QuoteHistory from './pages/QuoteHistory';
 import QuoteDetail from './pages/QuoteDetail';
 import PackageQuote from './pages/PackageQuote';
+import DXFVisualizationTest from './pages/DXFVisualizationTest';
 import Breadcrumbs from './components/Breadcrumbs';
 
 // Customer Portal imports
@@ -60,6 +61,9 @@ function AdminApp() {
             <li className="nav-item">
               <Link to="/admin/package-quote" className="nav-link">Package Quote</Link>
             </li>
+            <li className="nav-item">
+              <Link to="/admin/dxf-3d-test" className="nav-link">DXF 3D Test</Link>
+            </li>
           </ul>
         </div>
       </nav>
@@ -73,6 +77,7 @@ function AdminApp() {
             <Route path="/package-quote" element={<PackageQuote />} />
             <Route path="/quotes" element={<QuoteHistory />} />
             <Route path="/quotes/:id" element={<QuoteDetail />} />
+            <Route path="/dxf-3d-test" element={<DXFVisualizationTest />} />
           </Routes>
         </div>
       </main>

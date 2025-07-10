@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import api from '../../services/api';
+import api from '../../utils/api';
 
 const DXFViewer = ({ dxfData, onDataUpdate }) => {
   const mountRef = useRef(null);

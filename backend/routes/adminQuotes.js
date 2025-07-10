@@ -2,6 +2,7 @@ const express = require('express');
 const Quote = require('../models/Quote');
 const Customer = require('../models/Customer');
 const { adminAuth } = require('../middleware/auth');
+const { validate, quoteValidators } = require('../src/middleware/validators');
 
 const router = express.Router();
 
@@ -312,7 +313,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Calculate quote preview
-router.post('/calculate', async (req, res) => {
+router.post('/calculate', quoteValidators.calculateQuote, validate, async (req, res) => {
   try {
     // Support both old format (items array) and new format (direct quote data)
     const { items, ...directQuoteData } = req.body;

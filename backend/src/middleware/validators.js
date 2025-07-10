@@ -30,6 +30,19 @@ const quoteValidators = {
           if (!item.material) {
             throw new Error(`Item ${index + 1}: Material is required`);
           }
+          
+          // Valid materials in both formats
+          const validMaterials = [
+            // New format (lowercase with hyphens)
+            'cold-rolled-steel', 'stainless-304', 'stainless-316', 'aluminum-6061',
+            // Old format (title case)
+            'Cold Rolled Steel', 'Stainless Steel 304', 'Stainless Steel 316', 'Aluminum 6061'
+          ];
+          
+          if (!validMaterials.includes(item.material)) {
+            throw new Error(`Item ${index + 1}: Invalid material type '${item.material}'`);
+          }
+          
           if (!item.thickness || item.thickness < 0.0625 || item.thickness > 2) {
             throw new Error(`Item ${index + 1}: Thickness must be between 0.0625 and 2 inches`);
           }
