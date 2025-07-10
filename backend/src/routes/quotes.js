@@ -6,6 +6,8 @@ const pdfGenerator = require('../utils/pdfGenerator');
 const emailService = require('../utils/emailService');
 const multer = require('multer');
 const path = require('path');
+const { validate, quoteValidators, fileValidators } = require('../middleware/validators');
+const logger = require('../utils/logger');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -91,43 +93,125 @@ router.post('/analyze-dxf', upload.single('file'), async (req, res) => {
 });
 
 // Calculate quote (for preview)
-router.post('/calculate', async (req, res) => {
+router.post('/calculate', quoteValidators.calculateQuote, validate, async (req, res) => {
   try {
-    const { items } = req.body;
+    // Handle both old format (items array) and new format (direct quote data)
+    const { items, ...directQuoteData } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    // If items array is provided (old format)
+    if (items && Array.isArray(items) && items.length > 0) {
+      // Calculate pricing for each item
+      const calculatedItems = items.map((item) => {
+        const pricing = calculateQuote(item);
+        return {
+          ...item,
+          pricing,
+        };
+      });
+
+      // Calculate totals
+      const totalPrice = calculatedItems.reduce((sum, item) => {
+        return sum + parseFloat(item.pricing.costs.total || 0);
+      }, 0);
+
+      res.json({
+        items: calculatedItems,
+        totalPrice: totalPrice.toFixed(2),
+        calculated: true,
+      });
+    } 
+    // New format - direct quote calculation
+    else if (directQuoteData.material) {
+      // Material mapping for the new format
+      const materialMap = {
+        'cold-rolled-steel': 'Cold Rolled Steel',
+        'stainless-304': 'Stainless Steel 304',
+        'stainless-316': 'Stainless Steel 316',
+        'aluminum-6061': 'Aluminum 6061'
+      };
+
+      // Convert material name if needed
+      const mappedMaterial = materialMap[directQuoteData.material] || directQuoteData.material;
+
+      // Calculate the quote
+      const quoteData = {
+        ...directQuoteData,
+        material: mappedMaterial,
+        files: directQuoteData.dxfData ? [{ name: 'uploaded.dxf' }] : []
+      };
+
+      const pricing = calculateQuote(quoteData);
+
+      // Format response to match frontend expectations
+      const response = {
+        quote: {
+          pricing: {
+            subtotal: pricing.costs.subtotal,
+            urgencyMultiplier: directQuoteData.urgency === 'emergency' ? 1.5 : 
+                              directQuoteData.urgency === 'rush' ? 1.25 : 1.0,
+            quantity: directQuoteData.quantity,
+            total: pricing.costs.total,
+            perUnit: (parseFloat(pricing.costs.total) / directQuoteData.quantity).toFixed(2)
+          },
+          breakdown: {
+            material: {
+              cost: pricing.costs.materialCost,
+              weight: pricing.details.weightPounds,
+              pricePerPound: pricing.details.pricePerPound
+            },
+            operations: {
+              cutting: {
+                cost: pricing.costs.cuttingCost,
+                length: pricing.details.cutLengthPerPart,
+                rate: 0.10
+              },
+              piercing: {
+                cost: pricing.costs.pierceCost,
+                count: pricing.details.holeCount,
+                rate: 0.50
+              },
+              bending: {
+                cost: pricing.costs.bendCost,
+                count: pricing.details.bendCount,
+                rate: 5.00
+              }
+            },
+            finishing: {
+              cost: pricing.costs.finishCost,
+              area: pricing.details.totalAreaSqFt,
+              rate: directQuoteData.finishType === 'powder-coat' ? 3.50 :
+                    directQuoteData.finishType === 'anodize' ? 4.00 :
+                    directQuoteData.finishType === 'zinc-plate' ? 2.50 : 0,
+              type: directQuoteData.finishType
+            }
+          },
+          measurements: {
+            source: pricing.details.measurementSource,
+            area: pricing.details.totalAreaSqFt,
+            cutLength: pricing.details.cutLengthPerPart,
+            holes: pricing.details.holeCount,
+            bends: pricing.details.bendCount,
+            complexity: pricing.details.complexity
+          },
+          parameters: directQuoteData,
+          previewData: directQuoteData.dxfData?.previewData
+        }
+      };
+
+      res.json(response);
+    } else {
       return res
         .status(400)
-        .json({ error: 'No items provided for calculation' });
+        .json({ error: 'No quote data provided for calculation' });
     }
-
-    // Calculate pricing for each item
-    const calculatedItems = items.map((item) => {
-      const pricing = calculateQuote(item);
-      return {
-        ...item,
-        pricing,
-      };
-    });
-
-    // Calculate totals
-    const totalPrice = calculatedItems.reduce((sum, item) => {
-      return sum + parseFloat(item.pricing.costs.total || 0);
-    }, 0);
-
-    res.json({
-      items: calculatedItems,
-      totalPrice: totalPrice.toFixed(2),
-      calculated: true,
-    });
   } catch (error) {
     console.error('Error calculating quote:', error);
-    res.status(500).json({ error: 'Failed to calculate quote' });
+    res.status(500).json({ error: 'Failed to calculate quote: ' + error.message });
   }
 });
 
 // Create a new quote
-router.post('/', async (req, res) => {
+router.post('/', quoteValidators.createQuote, validate, async (req, res) => {
   try {
     const { customer, items, notes, dueDate } = req.body;
 
@@ -170,7 +254,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all quotes with advanced filtering
-router.get('/', async (req, res) => {
+router.get('/', quoteValidators.getQuotes, validate, async (req, res) => {
   try {
     const { 
       status, 
@@ -232,7 +316,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a single quote by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', quoteValidators.quoteId, validate, async (req, res) => {
   try {
     const quote = await Quote.findById(req.params.id);
 
@@ -248,7 +332,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update quote status
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', quoteValidators.updateQuoteStatus, validate, async (req, res) => {
   try {
     const { status } = req.body;
     const validStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired'];

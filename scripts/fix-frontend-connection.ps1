@@ -1,7 +1,7 @@
 # Fix Frontend API Connection - Complete Solution
 
 Write-Host "🔧 Fixing Frontend API Connection to Port 3002" -ForegroundColor Green
-Write-Host "=" * 50 -ForegroundColor Green
+Write-Host ("=" * 50) -ForegroundColor Green
 
 # Step 1: Stop all Node processes
 Write-Host "`n1. Stopping all Node processes..." -ForegroundColor Yellow
@@ -29,7 +29,7 @@ Write-Host "`n3. Clearing all caches..." -ForegroundColor Yellow
 Set-Location -Path "frontend" -ErrorAction Stop
 
 # Clear various caches
-$cacheDirs = @(".cache", "node_modules\.cache", "build", "%TEMP%\react-*")
+$cacheDirs = @(".cache", "node_modules\.cache", "build")
 foreach ($dir in $cacheDirs) {
     if (Test-Path $dir) {
         Write-Host "   Removing $dir..." -ForegroundColor Gray
@@ -57,7 +57,7 @@ Write-Host "`n5. Browser cleanup instructions:" -ForegroundColor Yellow
 Write-Host "   a. Open Chrome DevTools (F12)" -ForegroundColor White
 Write-Host "   b. Right-click the Refresh button" -ForegroundColor White
 Write-Host "   c. Select 'Empty Cache and Hard Reload'" -ForegroundColor White
-Write-Host "   d. Go to Application tab > Storage > Clear site data" -ForegroundColor White
+Write-Host "   d. Go to Application tab, then Storage, then Clear site data" -ForegroundColor White
 
 # Step 6: Start frontend
 Write-Host "`n6. Starting frontend server..." -ForegroundColor Yellow
@@ -75,4 +75,4 @@ Write-Host "1. Use an incognito/private browser window" -ForegroundColor White
 Write-Host "2. Try a different browser" -ForegroundColor White
 Write-Host "3. Disable browser extensions" -ForegroundColor White
 
-Set-Location -Path ".."
+cd ..
