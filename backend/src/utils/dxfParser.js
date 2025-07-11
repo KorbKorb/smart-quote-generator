@@ -57,12 +57,14 @@ class DXFAnalyzer {
       complexity: 'simple',
       warnings: [],
       confidence: 'high',
-      entities: {
+      entities: dxf.entities || [], // Include raw entities for complexity analysis
+      entityCounts: {
         circles: 0,
         lines: 0,
         polylines: 0,
         arcs: 0
-      }
+      },
+      bounds: {} // Will be populated with min/max values
     };
 
     if (!dxf || !dxf.entities) {
@@ -84,7 +86,7 @@ class DXFAnalyzer {
       switch (entity.type) {
         case 'CIRCLE':
           circles.push(entity);
-          result.entities.circles++;
+          result.entityCounts.circles++;
           // Update bounding box
           minX = Math.min(minX, entity.center.x - entity.radius);
           maxX = Math.max(maxX, entity.center.x + entity.radius);
@@ -95,7 +97,7 @@ class DXFAnalyzer {
         case 'LWPOLYLINE':
         case 'POLYLINE':
           polylines.push(entity);
-          result.entities.polylines++;
+          result.entityCounts.polylines++;
           // Update bounding box from vertices
           if (entity.vertices) {
             entity.vertices.forEach(v => {
@@ -109,7 +111,7 @@ class DXFAnalyzer {
           
         case 'LINE':
           lines.push(entity);
-          result.entities.lines++;
+          result.entityCounts.lines++;
           // Update bounding box
           if (entity.start && entity.end) {
             minX = Math.min(minX, entity.start.x, entity.end.x);
@@ -121,7 +123,7 @@ class DXFAnalyzer {
           
         case 'ARC':
           arcs.push(entity);
-          result.entities.arcs++;
+          result.entityCounts.arcs++;
           break;
       }
     });
@@ -130,6 +132,13 @@ class DXFAnalyzer {
     if (minX !== Infinity) {
       result.boundingBox.width = maxX - minX;
       result.boundingBox.height = maxY - minY;
+      // Also set bounds for complexity analyzer
+      result.bounds = {
+        minX: minX,
+        maxX: maxX,
+        minY: minY,
+        maxY: maxY
+      };
     }
 
     // Process circles (holes)

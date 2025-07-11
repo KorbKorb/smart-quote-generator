@@ -1,6 +1,7 @@
 // backend/src/utils/quoteCalculator.js
 
 const dxfParser = require('./dxfParser');
+const { enhancedCalculateCuttingCost } = require('./cuttingComplexityAnalyzer');
 
 const calculateQuote = (quoteData) => {
   // Material properties (price per pound, density in lbs/cubic inch)
@@ -57,17 +58,39 @@ const calculateQuote = (quoteData) => {
   // Base material cost
   const materialCost = weightPounds * material.pricePerPound;
 
-  // Cutting cost (setup + per inch)
-  const setupCost = 25;
-  const totalCutLength = cutLengthPerPart * quantity;
+  // Enhanced cutting cost calculation using complexity analyzer
+  let cuttingCost, cuttingAnalysis;
   
-  // Cutting rate varies by material and thickness
-  let cuttingRate = 0.25; // base rate per inch
-  if (thickness > 0.25) cuttingRate *= 1.5;
-  if (thickness > 0.5) cuttingRate *= 2;
-  if (quoteData.material.includes('Stainless')) cuttingRate *= 1.2;
-  
-  const cuttingCost = setupCost + (totalCutLength * cuttingRate);
+  if (quoteData.dxfData && quoteData.dxfData.entities) {
+    // Use enhanced cutting complexity analysis
+    const materialKey = quoteData.material.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace('304', '')
+      .replace('316', '')
+      .replace('6061', '');
+    
+    const cuttingResult = enhancedCalculateCuttingCost(
+      quoteData.dxfData,
+      thickness,
+      materialKey
+    );
+    
+    cuttingCost = 25 + (cuttingResult.cost * quantity); // Setup + per-part cost
+    cuttingAnalysis = cuttingResult.analysis;
+  } else {
+    // Fall back to simple calculation
+    const setupCost = 25;
+    const totalCutLength = cutLengthPerPart * quantity;
+    
+    // Cutting rate varies by material and thickness
+    let cuttingRate = 0.25; // base rate per inch
+    if (thickness > 0.25) cuttingRate *= 1.5;
+    if (thickness > 0.5) cuttingRate *= 2;
+    if (quoteData.material.includes('Stainless')) cuttingRate *= 1.2;
+    
+    cuttingCost = setupCost + (totalCutLength * cuttingRate);
+    cuttingAnalysis = null;
+  }
 
   // Pierce cost for holes - NOW SIZE-BASED
   let pierceCost = 0;
@@ -197,7 +220,15 @@ const calculateQuote = (quoteData) => {
       quantity: quantity,
       measurementSource: measurementSource,
       warnings: warnings,
-      holeDistribution: holeDistribution
+      holeDistribution: holeDistribution,
+      cuttingComplexity: cuttingAnalysis ? {
+        score: cuttingAnalysis.complexityScore,
+        straightCuts: cuttingAnalysis.straightCuts,
+        curvedCuts: cuttingAnalysis.curvedCuts,
+        tightCorners: cuttingAnalysis.tightCorners,
+        intricatePatterns: cuttingAnalysis.intricatePatterns,
+        recommendations: cuttingAnalysis.recommendations
+      } : null
     }
   };
 };
