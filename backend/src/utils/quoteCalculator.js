@@ -69,8 +69,30 @@ const calculateQuote = (quoteData) => {
   
   const cuttingCost = setupCost + (totalCutLength * cuttingRate);
 
-  // Pierce cost for holes
-  const pierceCost = holeCount * quantity * 0.50; // $0.50 per hole
+  // Pierce cost for holes - NOW SIZE-BASED
+  let pierceCost = 0;
+  if (quoteData.dxfData && quoteData.dxfData.holes && quoteData.dxfData.holes.length > 0) {
+    // Use actual hole data with size-based pricing
+    pierceCost = quoteData.dxfData.holes.reduce((total, hole) => {
+      let costPerHole;
+      const diameter = hole.diameter;
+      
+      if (diameter < 0.25) {
+        costPerHole = 0.30; // Small holes (< 1/4")
+      } else if (diameter < 0.75) {
+        costPerHole = 0.50; // Medium holes (1/4" to 3/4")
+      } else if (diameter < 2.0) {
+        costPerHole = 0.75; // Large holes (3/4" to 2")
+      } else {
+        costPerHole = 1.25; // Very large holes (> 2")
+      }
+      
+      return total + (costPerHole * quantity);
+    }, 0);
+  } else {
+    // Fall back to simple count-based pricing if no size data
+    pierceCost = holeCount * quantity * 0.50;
+  }
 
   // Bend cost - now based on actual bend count
   let bendCost = 0;
@@ -133,6 +155,23 @@ const calculateQuote = (quoteData) => {
   // Final total with margin
   const total = (subtotal + rushFee) * 1.20; // 20% profit margin
 
+  // Analyze hole distribution if available
+  let holeDistribution = null;
+  if (quoteData.dxfData && quoteData.dxfData.holes && quoteData.dxfData.holes.length > 0) {
+    holeDistribution = {
+      small: quoteData.dxfData.holes.filter(h => h.diameter < 0.25).length,
+      medium: quoteData.dxfData.holes.filter(h => h.diameter >= 0.25 && h.diameter < 0.75).length,
+      large: quoteData.dxfData.holes.filter(h => h.diameter >= 0.75 && h.diameter < 2.0).length,
+      veryLarge: quoteData.dxfData.holes.filter(h => h.diameter >= 2.0).length,
+      details: quoteData.dxfData.holes.map(h => ({
+        diameter: h.diameter.toFixed(3),
+        cost: h.diameter < 0.25 ? 0.30 : 
+              h.diameter < 0.75 ? 0.50 : 
+              h.diameter < 2.0 ? 0.75 : 1.25
+      }))
+    };
+  }
+
   return {
     costs: {
       materialCost: materialCost.toFixed(2),
@@ -157,7 +196,8 @@ const calculateQuote = (quoteData) => {
       pricePerPound: material.pricePerPound,
       quantity: quantity,
       measurementSource: measurementSource,
-      warnings: warnings
+      warnings: warnings,
+      holeDistribution: holeDistribution
     }
   };
 };

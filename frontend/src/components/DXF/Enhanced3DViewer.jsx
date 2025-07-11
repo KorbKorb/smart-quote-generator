@@ -132,7 +132,9 @@ const Enhanced3DViewer = ({ dxfData, material = 'cold-rolled-steel', thickness =
         if (dxfData.holes && dxfData.holes.length > 0) {
           dxfData.holes.forEach(hole => {
             const holePath = new THREE.Path();
-            holePath.absarc(hole.x, hole.y, hole.diameter / 2, 0, Math.PI * 2, true);
+            // Scale the hole radius properly (25.4 converts inches to mm)
+            const scaledRadius = (hole.diameter / 2) * 25.4;
+            holePath.absarc(hole.x, hole.y, scaledRadius, 0, Math.PI * 2, true);
             shape.holes.push(holePath);
           });
         }

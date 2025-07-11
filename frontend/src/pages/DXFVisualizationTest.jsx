@@ -100,12 +100,12 @@ const DXFVisualizationTest = () => {
       cutLength: 350,
       holeCount: 6,
       holes: [
-        { x: 50, y: 50, diameter: 10 },
-        { x: 250, y: 50, diameter: 10 },
-        { x: 50, y: 150, diameter: 10 },
-        { x: 250, y: 150, diameter: 10 },
-        { x: 150, y: 100, diameter: 20 },
-        { x: 150, y: 200, diameter: 15 }
+        { x: 50, y: 50, diameter: 0.125 },    // Small hole
+        { x: 250, y: 50, diameter: 0.125 },   // Small hole
+        { x: 50, y: 150, diameter: 0.5 },     // Medium hole
+        { x: 250, y: 150, diameter: 0.5 },    // Medium hole
+        { x: 150, y: 100, diameter: 1.5 },    // Large hole
+        { x: 150, y: 200, diameter: 2.5 }     // Very large hole
       ],
       bendLines: [
         { startPoint: { x: 0, y: 100 }, endPoint: { x: 300, y: 100 } },
@@ -262,6 +262,17 @@ const DXFVisualizationTest = () => {
                     <span className="font-medium">Piercing Cost:</span>
                     <span>${quote.breakdown.operations.piercing.cost}</span>
                   </div>
+                  
+                  {/* Hole Size Breakdown */}
+                  {quote.details?.holeDistribution && (
+                    <div className="ml-4 text-sm text-gray-600">
+                      <div>Small holes (< 1/4"): {quote.details.holeDistribution.small} × $0.30</div>
+                      <div>Medium holes (1/4" - 3/4"): {quote.details.holeDistribution.medium} × $0.50</div>
+                      <div>Large holes (3/4" - 2"): {quote.details.holeDistribution.large} × $0.75</div>
+                      <div>Very large holes (> 2"): {quote.details.holeDistribution.veryLarge} × $1.25</div>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between">
                     <span className="font-medium">Bending Cost:</span>
                     <span>${quote.breakdown.operations.bending.cost}</span>

@@ -25,16 +25,21 @@ AI-powered quote generation system for sheet metal fabrication with DXF file par
 - Located at: `backend/src/utils/dxfParser.js`
 - Successfully parses DXF files and extracts:
   - Area, perimeter, cut length
-  - Hole detection (count and positions)
+  - Hole detection (count and positions with diameters)
   - Bend line detection (on BEND layer)
   - Complexity assessment
   - Manufacturability warnings
 - Test files in: `test-files/` (chassis-panel.dxf, enclosure-flat.dxf, etc.)
 
-### 3. **Quote Calculation** (WORKING)
+### 3. **Quote Calculation** (ENHANCED)
 - Supports both old format (items array) and new format (direct parameters)
 - Material pricing: Cold Rolled Steel ($0.85/lb), SS304 ($2.50/lb), SS316 ($3.20/lb), Al6061 ($1.80/lb)
-- Operation costs: Cutting ($0.10/inch), Piercing ($0.50/hole), Bending ($5.00/bend)
+- **NEW: Size-based hole pricing**:
+  - Small holes (<0.25"): $0.30/hole
+  - Medium holes (0.25"-0.75"): $0.50/hole
+  - Large holes (0.75"-2.0"): $0.75/hole
+  - Very large holes (>2.0"): $1.25/hole
+- Operation costs: Cutting ($0.10/inch), Bending ($5.00/bend)
 - Finish options: Powder coat, anodize, zinc plate
 - Rush multipliers: Standard (1x), Rush (1.25x), Emergency (1.5x)
 
