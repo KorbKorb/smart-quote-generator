@@ -129,18 +129,41 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
         dxfData: dxfData, // Include DXF analysis data
       };
 
-      // Send in the format the backend expects
-      const response = await quoteAPI.calculateQuote([item]);
+      // Send in the new format the backend expects
+      const response = await quoteAPI.calculateQuote({
+        material: formData.material,
+        thickness: parseFloat(formData.thickness),
+        quantity: parseInt(formData.quantity) || 1,
+        finishType: formData.finishType || 'none',
+        bendComplexity: formData.bendComplexity,
+        toleranceLevel: formData.toleranceLevel,
+        urgency: formData.urgency,
+        dxfData: dxfData,
+        files: uploadedFiles
+      });
 
       console.log('Calculate response:', response.data);
 
-      // The response should have items[0].pricing
-      if (
+      // Handle different response structures
+      if (response.data.quote) {
+        // New format response
+        setPricePreview(response.data.quote);
+        setShowPriceModal(true);
+      } else if (
         response.data.items &&
         response.data.items[0] &&
         response.data.items[0].pricing
       ) {
+        // Old format response
         setPricePreview(response.data.items[0].pricing);
+        setShowPriceModal(true);
+      } else if (response.data.costs) {
+        // Direct costs response
+        setPricePreview({
+          costs: response.data.costs,
+          details: response.data.details,
+          breakdown: response.data.quote?.breakdown
+        });
         setShowPriceModal(true);
       } else {
         console.error('Unexpected response structure:', response.data);
@@ -180,22 +203,50 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
     setLoading(true);
     setError('');
 
+    console.log('Confirming quote with pricePreview:', pricePreview);
+
     try {
-      // Create the item with pricing info
-      const item = {
-        partName:
-          uploadedFiles.length > 0 ? uploadedFiles[0].name : 'Custom Part',
+      // Create the item with the correct structure for backend
+      // Ensure all costs are numbers, not strings
+      const costs = {
+        materialCost: parseFloat(pricePreview.costs?.materialCost || pricePreview.pricing?.costs?.materialCost || 0),
+        cuttingCost: parseFloat(pricePreview.costs?.cuttingCost || pricePreview.pricing?.costs?.cuttingCost || 0),
+        bendCost: parseFloat(pricePreview.costs?.bendCost || pricePreview.pricing?.costs?.bendCost || 0),
+        finishCost: parseFloat(pricePreview.costs?.finishCost || pricePreview.pricing?.costs?.finishCost || 0),
+        rushFee: parseFloat(pricePreview.costs?.rushFee || pricePreview.pricing?.costs?.rushFee || 0),
+        pierceCost: parseFloat(pricePreview.costs?.pierceCost || 0)
+      };
+      
+      const subtotal = Object.values(costs).reduce((sum, cost) => sum + cost, 0);
+      const total = subtotal;
+      
+      const processedItem = {
+        partName: uploadedFiles.length > 0 ? uploadedFiles[0].name : 'Custom Part',
         material: formData.material,
         thickness: parseFloat(formData.thickness),
         quantity: parseInt(formData.quantity) || 1,
-        finishType: formData.finishType || 'none',
-        bendComplexity: formData.bendComplexity,
-        toleranceLevel: formData.toleranceLevel,
-        urgency: formData.urgency,
+        finish: formData.finishType || 'none',
+        bendCount: dxfData?.bendLines?.length || 0,
+        rushOrder: formData.urgency !== 'standard',
         files: uploadedFiles,
-        dxfData: dxfData,
-        pricing: pricePreview, // Include the calculated pricing
+        pricing: {
+          costs: {
+            ...costs,
+            subtotal: subtotal.toFixed(2),
+            total: total.toFixed(2)
+          },
+          details: {
+            weightPounds: parseFloat(pricePreview.details?.weightPounds || pricePreview.breakdown?.material?.weight || 0),
+            totalAreaSqIn: parseFloat(pricePreview.details?.totalAreaSqIn || pricePreview.details?.areaPerPart || 0),
+            totalAreaSqFt: parseFloat(pricePreview.details?.totalAreaSqFt || pricePreview.measurements?.area || 0),
+            pricePerPound: parseFloat(pricePreview.details?.pricePerPound || pricePreview.breakdown?.material?.pricePerPound || 0),
+            quantity: parseInt(formData.quantity) || 1
+          }
+        }
       };
+
+      console.log('Processed item:', processedItem);
+      console.log('Pricing structure:', processedItem.pricing);
 
       // Prepare full quote data
       const quoteData = {
@@ -205,7 +256,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
           phone: '555-0123',
           company: 'Guest Company',
         },
-        items: [item],
+        items: [processedItem],
         notes: formData.notes || 'Generated from smart quote form',
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       };
@@ -213,10 +264,7 @@ const QuoteForm = ({ uploadedFiles, onQuoteGenerated }) => {
       console.log('Sending quote data:', quoteData);
 
       // Send to backend to create quote
-      const response = await axios.post(
-        'http://localhost:5000/api/quotes',
-        quoteData
-      );
+      const response = await quoteAPI.createQuote(quoteData);
 
       console.log('Quote created:', response.data);
 

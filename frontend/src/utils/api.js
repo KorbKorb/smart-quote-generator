@@ -63,7 +63,7 @@ export const quoteAPI = {
   deleteQuote: (id) => api.delete(`/quotes/${id}`),
 
   // Calculate quote preview
-  calculateQuote: (items) => api.post('/quotes/calculate', { items }),
+  calculateQuote: (data) => api.post('/quotes/calculate', data),
 
   // Get materials
   getMaterials: () => api.get('/quotes/materials'),
