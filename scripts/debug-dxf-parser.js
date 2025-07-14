@@ -1,55 +1,57 @@
-// Debug DXF parsing to see what's actually happening
+// debug-dxf-parser.js
+// Debug script to see what the DXF parser is actually returning
+
 const path = require('path');
-const fs = require('fs').promises;
+const { parseDXF } = require('../backend/src/utils/quoteCalculator');
 
-// Import the DXF parser directly
-const dxfParser = require('../backend/src/utils/dxfParser');
-
-async function debugDXFParsing() {
-  console.log('🔍 Debug DXF Parsing\n');
-
-  const testFile = 'chassis-panel.dxf';
-  const filePath = path.join(__dirname, '../test-files', testFile);
-
+async function debugDXFParser() {
+  console.log('🔍 DXF Parser Debug\n');
+  
+  const testFile = path.join(__dirname, '..', 'test-files', 'test-rectangle-10x10.dxf');
+  
   try {
-    console.log(`Reading ${testFile}...`);
-    const fileContent = await fs.readFile(filePath, 'utf-8');
+    console.log('Parsing:', testFile);
+    const result = await parseDXF(testFile);
     
-    console.log('\n📄 File Content Preview:');
-    console.log(fileContent.substring(0, 500) + '...\n');
-
-    console.log('Parsing DXF...');
-    const result = await dxfParser.parse(filePath);
-
-    console.log('\n🔍 Parser Result Structure:');
-    console.log(JSON.stringify(result, null, 2));
-
-    // Check what the parser is actually returning
-    console.log('\n📊 Detailed Analysis:');
-    console.log('Keys in result:', Object.keys(result));
+    console.log('\n📊 Parser Output:');
+    console.log('Area:', result.area);
+    console.log('Perimeter:', result.perimeter);
+    console.log('Cut Length:', result.cutLength);
+    console.log('Entities array length:', result.entities?.length || 0);
+    console.log('Entity Counts:', result.entityCounts);
+    console.log('Bounds:', result.bounds);
     
-    if (result.entities) {
-      console.log('Entities structure:', result.entities);
+    if (result.entities && result.entities.length > 0) {
+      console.log('\n🔧 First few entities:');
+      result.entities.slice(0, 5).forEach((entity, i) => {
+        console.log(`Entity ${i}:`, {
+          type: entity.type,
+          startPoint: entity.startPoint || entity.start,
+          endPoint: entity.endPoint || entity.end,
+          center: entity.center,
+          radius: entity.radius
+        });
+      });
+    } else {
+      console.log('\n⚠️  No entities found in the result!');
     }
     
-    if (result.holes) {
-      console.log('Holes array length:', result.holes.length);
-      if (result.holes.length > 0) {
-        console.log('First hole:', result.holes[0]);
-      }
+    // Also check if raw DXF file has entities
+    const DxfParser = require('dxf-parser');
+    const fs = require('fs');
+    const parser = new DxfParser();
+    const fileContent = fs.readFileSync(testFile, 'utf8');
+    const rawDxf = parser.parseSync(fileContent);
+    
+    console.log('\n📄 Raw DXF parse:');
+    console.log('Raw entities count:', rawDxf.entities?.length || 0);
+    if (rawDxf.entities && rawDxf.entities.length > 0) {
+      console.log('First raw entity:', rawDxf.entities[0]);
     }
     
-    if (result.bendLines) {
-      console.log('Bend lines array length:', result.bendLines.length);
-      if (result.bendLines.length > 0) {
-        console.log('First bend line:', result.bendLines[0]);
-      }
-    }
-
   } catch (error) {
     console.error('Error:', error);
-    console.error('Stack:', error.stack);
   }
 }
 
-debugDXFParsing();
+debugDXFParser();

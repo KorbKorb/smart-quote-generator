@@ -60,8 +60,12 @@ const calculateQuote = (quoteData) => {
 
   // Enhanced cutting cost calculation using complexity analyzer
   let cuttingCost, cuttingAnalysis;
+  let totalCutLength = cutLengthPerPart * quantity; // Define for both paths
   
-  if (quoteData.dxfData && quoteData.dxfData.entities) {
+  console.log('DXF Data available:', !!quoteData.dxfData);
+  console.log('Entities available:', quoteData.dxfData?.entities?.length || 0);
+  
+  if (quoteData.dxfData && quoteData.dxfData.entities && quoteData.dxfData.entities.length > 0) {
     // Use enhanced cutting complexity analysis
     const materialKey = quoteData.material.toLowerCase()
       .replace(/\s+/g, '-')
@@ -77,10 +81,12 @@ const calculateQuote = (quoteData) => {
     
     cuttingCost = 25 + (cuttingResult.cost * quantity); // Setup + per-part cost
     cuttingAnalysis = cuttingResult.analysis;
+    console.log('Using enhanced cutting complexity analysis');
+    console.log('Complexity score:', cuttingAnalysis.complexityScore);
   } else {
     // Fall back to simple calculation
     const setupCost = 25;
-    const totalCutLength = cutLengthPerPart * quantity;
+    // totalCutLength already defined above
     
     // Cutting rate varies by material and thickness
     let cuttingRate = 0.25; // base rate per inch
@@ -90,6 +96,7 @@ const calculateQuote = (quoteData) => {
     
     cuttingCost = setupCost + (totalCutLength * cuttingRate);
     cuttingAnalysis = null;
+    console.log('Using simple cutting calculation');
   }
 
   // Pierce cost for holes - NOW SIZE-BASED

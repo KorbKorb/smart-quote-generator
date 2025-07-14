@@ -266,10 +266,10 @@ const DXFVisualizationTest = () => {
                   {/* Hole Size Breakdown */}
                   {quote.details?.holeDistribution && (
                     <div className="ml-4 text-sm text-gray-600">
-                      <div>Small holes (< 1/4"): {quote.details.holeDistribution.small} × $0.30</div>
+                      <div>Small holes (&lt; 1/4"): {quote.details.holeDistribution.small} × $0.30</div>
                       <div>Medium holes (1/4" - 3/4"): {quote.details.holeDistribution.medium} × $0.50</div>
                       <div>Large holes (3/4" - 2"): {quote.details.holeDistribution.large} × $0.75</div>
-                      <div>Very large holes (> 2"): {quote.details.holeDistribution.veryLarge} × $1.25</div>
+                      <div>Very large holes (&gt; 2"): {quote.details.holeDistribution.veryLarge} × $1.25</div>
                     </div>
                   )}
                   

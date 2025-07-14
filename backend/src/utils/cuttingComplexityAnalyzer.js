@@ -24,11 +24,14 @@ class CuttingComplexityAnalyzer {
       switch (entity.type) {
         case 'LINE':
           analysis.straightCuts++;
-          analysis.segments.push({
-            type: 'straight',
-            length: this.calculateLineLength(entity),
-            rate: 0.10
-          });
+          const lineLength = this.calculateLineLength(entity);
+          if (lineLength > 0) {
+            analysis.segments.push({
+              type: 'straight',
+              length: lineLength,
+              rate: 0.10
+            });
+          }
           break;
 
         case 'ARC':
@@ -91,9 +94,26 @@ class CuttingComplexityAnalyzer {
   }
 
   calculateLineLength(line) {
-    const dx = (line.endPoint?.x || 0) - (line.startPoint?.x || 0);
-    const dy = (line.endPoint?.y || 0) - (line.startPoint?.y || 0);
-    return Math.sqrt(dx * dx + dy * dy);
+    // Handle different property names from DXF parser
+    if (line.vertices && line.vertices.length >= 2) {
+      // LINE entities use vertices array
+      const start = line.vertices[0];
+      const end = line.vertices[1];
+      const dx = (end.x || 0) - (start.x || 0);
+      const dy = (end.y || 0) - (start.y || 0);
+      return Math.sqrt(dx * dx + dy * dy);
+    } else if (line.startPoint && line.endPoint) {
+      // Alternative format
+      const dx = (line.endPoint.x || 0) - (line.startPoint.x || 0);
+      const dy = (line.endPoint.y || 0) - (line.startPoint.y || 0);
+      return Math.sqrt(dx * dx + dy * dy);
+    } else if (line.start && line.end) {
+      // Another alternative format
+      const dx = (line.end.x || 0) - (line.start.x || 0);
+      const dy = (line.end.y || 0) - (line.start.y || 0);
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    return 0;
   }
 
   calculateArcLength(arc) {
@@ -114,6 +134,9 @@ class CuttingComplexityAnalyzer {
     };
 
     const vertices = polyline.vertices || [];
+    
+    // Skip if not enough vertices
+    if (vertices.length < 2) return result;
     
     for (let i = 0; i < vertices.length - 1; i++) {
       const v1 = vertices[i];

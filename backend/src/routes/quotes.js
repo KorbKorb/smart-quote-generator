@@ -144,6 +144,9 @@ router.post('/calculate', quoteValidators.calculateQuote, validate, async (req, 
 
       // Format response to match frontend expectations
       const response = {
+        // Include both new and old format for compatibility
+        costs: pricing.costs,
+        details: pricing.details,
         quote: {
           pricing: {
             subtotal: pricing.costs.subtotal,
@@ -191,7 +194,8 @@ router.post('/calculate', quoteValidators.calculateQuote, validate, async (req, 
             cutLength: pricing.details.cutLengthPerPart,
             holes: pricing.details.holeCount,
             bends: pricing.details.bendCount,
-            complexity: pricing.details.complexity
+            complexity: pricing.details.complexity,
+            cuttingComplexity: pricing.details.cuttingComplexity
           },
           parameters: directQuoteData,
           previewData: directQuoteData.dxfData?.previewData
